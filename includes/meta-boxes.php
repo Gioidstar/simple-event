@@ -50,11 +50,12 @@ function se_render_event_meta_box($post) {
     $google_form_url = get_post_meta($post->ID, '_se_event_google_form_url', true);
     $form_title = get_post_meta($post->ID, '_se_event_form_title', true);
     $form_subtitle = get_post_meta($post->ID, '_se_event_form_subtitle', true);
+    $until_finished = get_post_meta($post->ID, '_se_event_until_finished', true);
 
     // Set default time values if empty
     if (empty($start_time)) $start_time = '09:00';
     if (empty($end_time)) $end_time = '17:00';
-    
+
     // Add nonce for security
     wp_nonce_field('se_event_meta_nonce', 'se_event_meta_nonce');
     ?>
@@ -64,10 +65,21 @@ function se_render_event_meta_box($post) {
         <label for="se_event_start_time" style="margin-left: 10px;"><strong>Jam Mulai:</strong></label>
         <input type="time" id="se_event_start_time" name="se_event_start_time" value="<?php echo esc_attr($start_time); ?>" required></p>
 
-        <p><label for="se_event_end_date"><strong>End Date:</strong></label><br>
-        <input type="date" id="se_event_end_date" name="se_event_end_date" value="<?php echo esc_attr($end_date); ?>" required>
-        <label for="se_event_end_time" style="margin-left: 10px;"><strong>Jam Selesai:</strong></label>
-        <input type="time" id="se_event_end_time" name="se_event_end_time" value="<?php echo esc_attr($end_time); ?>" required></p>
+        <p><label for="se_event_end_date"><strong>End Date:</strong></label>
+        <label style="margin-left: 15px; cursor: pointer; background: <?php echo $until_finished ? '#EA242A' : '#f0f0f0'; ?>; color: <?php echo $until_finished ? '#fff' : '#333'; ?>; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s;" id="se_until_finished_label">
+            <input type="checkbox" id="se_event_until_finished" name="se_event_until_finished" value="1" <?php checked($until_finished, '1'); ?> style="margin: 0;">
+            Sampai Selesai
+        </label>
+        <br>
+        <span id="se_end_date_fields" style="<?php echo $until_finished ? 'display:none;' : ''; ?>">
+            <input type="date" id="se_event_end_date" name="se_event_end_date" value="<?php echo esc_attr($end_date); ?>" required>
+            <label for="se_event_end_time" style="margin-left: 10px;"><strong>Jam Selesai:</strong></label>
+            <input type="time" id="se_event_end_time" name="se_event_end_time" value="<?php echo esc_attr($end_time); ?>" required>
+        </span>
+        <span id="se_until_finished_info" style="<?php echo $until_finished ? '' : 'display:none;'; ?> color: #EA242A; font-weight: 600; font-size: 13px;">
+            Event akan selesai pada tanggal Start Date (<span id="se_until_finished_date"><?php echo !empty($start_date) ? date_i18n('d M Y', strtotime($start_date)) : '-'; ?></span>)
+        </span>
+        </p>
 
         <p><label for="se_event_location"><strong>Lokasi:</strong></label><br>
         <input type="text" id="se_event_location" name="se_event_location" value="<?php echo esc_attr($location); ?>" style="width:100%;"></p>
@@ -102,19 +114,61 @@ function se_render_event_meta_box($post) {
         const startTimeInput = document.getElementById('se_event_start_time');
         const endDateInput = document.getElementById('se_event_end_date');
         const endTimeInput = document.getElementById('se_event_end_time');
-        
+        const untilFinishedCheckbox = document.getElementById('se_event_until_finished');
+        const untilFinishedLabel = document.getElementById('se_until_finished_label');
+        const endDateFields = document.getElementById('se_end_date_fields');
+        const untilFinishedInfo = document.getElementById('se_until_finished_info');
+
+        const untilFinishedDateSpan = document.getElementById('se_until_finished_date');
+
+        // Format date for display
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr + 'T00:00:00');
+            const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+            return d.getDate().toString().padStart(2,'0') + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+        }
+
+        // Update info date from start date
+        function updateInfoDate() {
+            untilFinishedDateSpan.textContent = formatDate(startDateInput.value);
+        }
+
+        // Handle "Sampai Selesai" checkbox
+        function toggleUntilFinished() {
+            if (untilFinishedCheckbox.checked) {
+                endDateFields.style.display = 'none';
+                untilFinishedInfo.style.display = '';
+                endDateInput.removeAttribute('required');
+                endTimeInput.removeAttribute('required');
+                untilFinishedLabel.style.background = '#EA242A';
+                untilFinishedLabel.style.color = '#fff';
+                updateInfoDate();
+            } else {
+                endDateFields.style.display = '';
+                untilFinishedInfo.style.display = 'none';
+                endDateInput.setAttribute('required', 'required');
+                endTimeInput.setAttribute('required', 'required');
+                untilFinishedLabel.style.background = '#f0f0f0';
+                untilFinishedLabel.style.color = '#333';
+            }
+        }
+
+        untilFinishedCheckbox.addEventListener('change', toggleUntilFinished);
+
         // Function to validate dates
         function validateDates() {
+            if (untilFinishedCheckbox.checked) return true;
             const startDate = new Date(`${startDateInput.value}T${startTimeInput.value}`);
             const endDate = new Date(`${endDateInput.value}T${endTimeInput.value}`);
-            
+
             if (endDate < startDate) {
                 alert('Error: Tanggal selesai tidak boleh lebih awal dari tanggal mulai.');
                 return false;
             }
             return true;
         }
-        
+
         // Set up validation when the form is submitted
         const form = document.querySelector('#post');
         form.addEventListener('submit', function(e) {
@@ -122,14 +176,15 @@ function se_render_event_meta_box($post) {
                 e.preventDefault();
             }
         });
-        
+
         // Set up validation when end date or time changes
         endDateInput.addEventListener('change', validateDates);
         endTimeInput.addEventListener('change', validateDates);
-        
-        // If start date changes, update end date minimum
+
+        // If start date changes, update end date minimum and info text
         startDateInput.addEventListener('change', function() {
             endDateInput.min = startDateInput.value;
+            if (untilFinishedCheckbox.checked) updateInfoDate();
             validateDates();
         });
     });
@@ -485,13 +540,24 @@ function se_save_event_meta($post_id) {
     // Cek jika user memiliki izin
     if (!current_user_can('edit_post', $post_id)) return;
 
-    // Validasi tanggal (server-side)
-    if (isset($_POST['se_event_start_date']) && isset($_POST['se_event_end_date']) && 
+    // Handle "Sampai Selesai" checkbox
+    $until_finished = !empty($_POST['se_event_until_finished']) ? '1' : '';
+    update_post_meta($post_id, '_se_event_until_finished', $until_finished);
+
+    // Jika "Sampai Selesai" dicentang, set end date = start date dan end time ke 23:59
+    if ($until_finished && isset($_POST['se_event_start_date'])) {
+        $start = sanitize_text_field($_POST['se_event_start_date']);
+        update_post_meta($post_id, '_se_event_end_date', $start);
+        update_post_meta($post_id, '_se_event_end_time', '23:59');
+    }
+
+    // Validasi tanggal (server-side) - skip jika "Sampai Selesai" aktif
+    if (!$until_finished && isset($_POST['se_event_start_date']) && isset($_POST['se_event_end_date']) &&
         isset($_POST['se_event_start_time']) && isset($_POST['se_event_end_time'])) {
-        
+
         $start_datetime = strtotime($_POST['se_event_start_date'] . ' ' . $_POST['se_event_start_time']);
         $end_datetime = strtotime($_POST['se_event_end_date'] . ' ' . $_POST['se_event_end_time']);
-        
+
         if ($end_datetime < $start_datetime) {
             // Add error message
             add_settings_error(
@@ -500,7 +566,7 @@ function se_save_event_meta($post_id) {
                 'Error: Tanggal selesai tidak boleh lebih awal dari tanggal mulai.',
                 'error'
             );
-            
+
             // Show error message
             settings_errors('se_event_dates');
             return;
@@ -511,17 +577,20 @@ function se_save_event_meta($post_id) {
     if (isset($_POST['se_event_start_date'])) {
         update_post_meta($post_id, '_se_event_start_date', sanitize_text_field($_POST['se_event_start_date']));
     }
-    
+
     if (isset($_POST['se_event_start_time'])) {
         update_post_meta($post_id, '_se_event_start_time', sanitize_text_field($_POST['se_event_start_time']));
     }
 
-    if (isset($_POST['se_event_end_date'])) {
-        update_post_meta($post_id, '_se_event_end_date', sanitize_text_field($_POST['se_event_end_date']));
-    }
-    
-    if (isset($_POST['se_event_end_time'])) {
-        update_post_meta($post_id, '_se_event_end_time', sanitize_text_field($_POST['se_event_end_time']));
+    // Simpan end date/time hanya jika bukan "Sampai Selesai"
+    if (!$until_finished) {
+        if (isset($_POST['se_event_end_date'])) {
+            update_post_meta($post_id, '_se_event_end_date', sanitize_text_field($_POST['se_event_end_date']));
+        }
+
+        if (isset($_POST['se_event_end_time'])) {
+            update_post_meta($post_id, '_se_event_end_time', sanitize_text_field($_POST['se_event_end_time']));
+        }
     }
 
     if (isset($_POST['se_event_location'])) {

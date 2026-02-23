@@ -19,6 +19,7 @@ if (have_posts()) :
     $google_form_url = get_post_meta(get_the_ID(), '_se_event_google_form_url', true);
     $form_title = get_post_meta(get_the_ID(), '_se_event_form_title', true);
     $form_subtitle = get_post_meta(get_the_ID(), '_se_event_form_subtitle', true);
+    $until_finished = get_post_meta(get_the_ID(), '_se_event_until_finished', true);
 
     // Check if event has ended
     $is_event_ended = false;
@@ -43,6 +44,8 @@ if (have_posts()) :
 
     // Format display date
     $display_date = !empty($event_start_date) ? date_i18n('l, d F Y', strtotime($event_start_date)) : '';
+    // Format end date display for "Sampai Selesai"
+    $display_end_date = $until_finished ? 'Selesai' : (!empty($event_end_date) ? date_i18n('l, d F Y', strtotime($event_end_date)) : '');
 ?>
 
 <style>
@@ -140,8 +143,12 @@ if (have_posts()) :
             <h1 style="font-size: 2rem; margin-bottom: 0.5rem;"><?php the_title(); ?></h1>
             <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Detail Event</h2>
             <div style="background-color: #f9f9f9; padding: 1rem; border-radius: 8px;">
-                <p><strong>📅 Tanggal:</strong> <?php echo esc_html($display_date); ?></p>
+                <p><strong>📅 Tanggal:</strong> <?php echo esc_html($display_date); ?><?php if ($until_finished): ?> <span style="background: #EA242A; color: #fff; padding: 2px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">Selesai</span><?php endif; ?></p>
+                <?php if (!$until_finished): ?>
                 <p><strong>🕒 Jam:</strong> <?php echo esc_html($event_start_time); ?> - <?php echo esc_html($event_end_time); ?></p>
+                <?php else: ?>
+                <p><strong>🕒 Jam:</strong> <?php echo esc_html($event_start_time); ?> - Selesai</p>
+                <?php endif; ?>
                 <p><strong>📍 Lokasi:</strong> <?php echo esc_html($event_location); ?></p>
             </div>
 
