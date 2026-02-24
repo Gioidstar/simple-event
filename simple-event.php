@@ -3,7 +3,7 @@
  * Plugin Name: Simple Event
  * Plugin URI: https://github.com/Gioidstar/simple-event
  * Description: Plugin to create events and registration forms with submission system.
- * Version: 2.1.0
+ * Version: 2.1.1
  * Author: Gio fandi
  * Author URI: https://github.com/Gioidstar
  */
@@ -15,13 +15,16 @@ require_once plugin_dir_path(__FILE__) . 'includes/post-types.php';
 require_once plugin_dir_path(__FILE__) . 'includes/meta-boxes.php';
 require_once plugin_dir_path(__FILE__) . 'includes/registration-form.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcode-event-list.php'; // display submission data in admin
+require_once plugin_dir_path(__FILE__) . 'includes/shortcode-event-compact.php';
 require_once plugin_dir_path(__FILE__) . 'includes/replay-form.php';
 require_once plugin_dir_path(__FILE__) . 'includes/ticket.php';
 
 // Elementor Integration
 function se_register_elementor_widgets($widgets_manager) {
     require_once plugin_dir_path(__FILE__) . 'includes/widgets/elementor-event-grid.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/widgets/elementor-event-compact.php';
     $widgets_manager->register(new SE_Elementor_Event_Grid_Widget());
+    $widgets_manager->register(new SE_Elementor_Event_Compact_Widget());
 }
 add_action('elementor/widgets/register', 'se_register_elementor_widgets');
 

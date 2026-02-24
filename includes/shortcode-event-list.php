@@ -10,10 +10,11 @@
  * Attributes:
  *   category  - Event category slug (comma-separated for multiple). Empty = all.
  *   columns   - Number of grid columns: 1, 2, 3, 4 (default: 3)
- *   per_page  - Number of events displayed. -1 = all (default: -1)
+ *   per_page  - Number of events per page. -1 = all, no pagination (default: -1)
  *   status    - Filter status: "upcoming", "past", "all" (default: "all")
  *   orderby   - Sort by: "date", "title" (default: "date")
  *   order     - ASC or DESC (default: "DESC")
+ *   show_filter - Show category filter tabs: "yes" or "no" (default: "no")
  */
 
 function se_event_list_shortcode($atts) {
@@ -33,6 +34,12 @@ function se_event_list_shortcode($atts) {
     $order    = strtoupper($atts['order']) === 'ASC' ? 'ASC' : 'DESC';
     $show_filter = $atts['show_filter'] === 'yes';
 
+    // Pagination: get current page
+    $paged = 1;
+    if ($per_page > 0) {
+        $paged = max(1, intval(get_query_var('paged') ?: get_query_var('page') ?: 1));
+    }
+
     // Clean category - trim whitespace and filter empty values
     $category_raw = trim($atts['category']);
     $category_slugs = [];
@@ -47,6 +54,11 @@ function se_event_list_shortcode($atts) {
         'post_status'    => 'publish',
         'ignore_sticky_posts' => true,
     ];
+
+    // Add paged if pagination is active
+    if ($per_page > 0) {
+        $args['paged'] = $paged;
+    }
 
     // Orderby
     if ($atts['orderby'] === 'title') {
@@ -195,6 +207,19 @@ function se_event_list_shortcode($atts) {
         }
 
         echo '</div>';
+
+        // Pagination
+        if ($per_page > 0 && $query->max_num_pages > 1) {
+            echo '<div class="se-pagination">';
+            echo paginate_links([
+                'total'   => $query->max_num_pages,
+                'current' => $paged,
+                'format'  => 'page/%#%/',
+                'prev_text' => '&laquo;',
+                'next_text' => '&raquo;',
+            ]);
+            echo '</div>';
+        }
     } else {
         echo '<p class="se-no-events">No events found.</p>';
     }
@@ -343,6 +368,52 @@ function se_output_event_grid_css() {
     }
     .se-event-card.se-hidden{
         display:none;
+    }
+    /* Pagination */
+    .se-pagination{
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        gap:4px;
+        margin-top:32px;
+        flex-wrap:wrap;
+    }
+    .se-pagination .page-numbers{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:40px;
+        height:40px;
+        padding:0 12px;
+        border:2px solid #e5e7eb;
+        border-radius:8px;
+        background:#fff;
+        color:#374151;
+        font-size:14px;
+        font-weight:500;
+        text-decoration:none;
+        transition:all 0.2s;
+    }
+    .se-pagination .page-numbers:hover{
+        border-color:#EA242A;
+        color:#EA242A;
+    }
+    .se-pagination .page-numbers.current{
+        background:#EA242A;
+        border-color:#EA242A;
+        color:#fff;
+    }
+    .se-pagination .page-numbers.dots{
+        border:none;
+        background:none;
+        cursor:default;
+    }
+    .se-pagination .page-numbers.dots:hover{
+        color:#374151;
+    }
+    .se-pagination .page-numbers.prev,
+    .se-pagination .page-numbers.next{
+        font-weight:700;
     }
     </style>
     <?php

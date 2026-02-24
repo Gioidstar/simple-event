@@ -47,6 +47,13 @@ Display events on any page or post:
 [event_list]
 [event_list category="webinar" columns="3" per_page="6" status="upcoming"]
 [event_list category="workshop,seminar" columns="2" per_page="-1" status="all" orderby="date"]
+[event_list per_page="6" columns="3"]
+```
+
+```
+[event_compact]
+[event_compact columns="2" per_page="4" status="upcoming"]
+[event_compact category="webinar" columns="3" per_page="6"]
 ```
 
 **Attributes:**
