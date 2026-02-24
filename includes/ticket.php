@@ -1,9 +1,9 @@
 <?php
 /**
  * Ticket System
- * - Generate ticket URL dengan hash untuk keamanan
- * - Tampilkan halaman tiket saat QR code di-scan
- * - Generate QR code URL menggunakan API
+ * - Generate ticket URL with hash for security
+ * - Display ticket page when QR code is scanned
+ * - Generate QR code URL using API
  */
 
 // Generate secure ticket hash
@@ -33,7 +33,7 @@ function se_get_ticket_qr_html($submission_id) {
     return "<div style='text-align:center; margin:20px 0; padding:20px; background:#fff; border:2px dashed #ddd; border-radius:8px;'>
         <p style='font-weight:bold; margin-bottom:10px; color:#333;'>E-Ticket</p>
         <img src='" . esc_url($qr_url) . "' alt='QR Ticket' style='width:200px; height:200px;'>
-        <p style='font-size:12px; color:#888; margin-top:10px;'>Scan QR code ini untuk verifikasi tiket</p>
+        <p style='font-size:12px; color:#888; margin-top:10px;'>Scan this QR code to verify ticket</p>
     </div>";
 }
 
@@ -49,7 +49,7 @@ function se_handle_ticket_page() {
     // Verify hash
     $expected_hash = se_generate_ticket_hash($submission_id);
     if ($verify_hash !== $expected_hash) {
-        wp_die('Tiket tidak valid.', 'Tiket Tidak Valid', ['response' => 403]);
+        wp_die('Invalid ticket.', 'Invalid Ticket', ['response' => 403]);
     }
 
     // Get submission data
@@ -61,7 +61,7 @@ function se_handle_ticket_page() {
     ));
 
     if (!$submission) {
-        wp_die('Data tiket tidak ditemukan.', 'Tiket Tidak Ditemukan', ['response' => 404]);
+        wp_die('Ticket data not found.', 'Ticket Not Found', ['response' => 404]);
     }
 
     // Get event data
@@ -137,17 +137,17 @@ function se_handle_ticket_page() {
 
                 <div class="ticket-grid">
                     <div class="ticket-info">
-                        <div class="label">Tanggal</div>
+                        <div class="label">Date</div>
                         <div class="value"><?php echo esc_html($display_date); ?></div>
                     </div>
                     <div class="ticket-info">
-                        <div class="label">Jam</div>
+                        <div class="label">Time</div>
                         <div class="value"><?php echo esc_html($start_time); ?> - <?php echo esc_html($end_time); ?></div>
                     </div>
                 </div>
 
                 <div class="ticket-info">
-                    <div class="label">Lokasi</div>
+                    <div class="label">Location</div>
                     <div class="value"><?php echo esc_html($location); ?></div>
                 </div>
 
@@ -189,12 +189,12 @@ function se_handle_ticket_page() {
 
                 <div class="ticket-status">
                     <div class="icon">&#10003;</div>
-                    <p>Terdaftar</p>
+                    <p>Registered</p>
                 </div>
             </div>
 
             <div class="ticket-footer">
-                Ticket #<?php echo esc_html($submission_id); ?> &bull; Terdaftar <?php echo esc_html(date_i18n('d M Y, H:i', strtotime($submission->created_at))); ?>
+                Ticket #<?php echo esc_html($submission_id); ?> &bull; Registered <?php echo esc_html(date_i18n('d M Y, H:i', strtotime($submission->created_at))); ?>
             </div>
         </div>
     </body>

@@ -25,7 +25,7 @@ function se_render_form_field($field, $id_prefix = 'se') {
     $field_id = $id_prefix . '_' . $key;
     $field_name = 'se_' . $key;
     $style    = 'width:100%; padding: 8px; box-sizing: border-box;';
-    $placeholder = esc_attr('Masukkan ' . $field['label']);
+    $placeholder = esc_attr('Enter ' . $field['label']);
 
     echo '<p>';
     echo '<label for="' . $field_id . '">' . $label . ':' . $req_star . '</label><br>';
@@ -36,7 +36,7 @@ function se_render_form_field($field, $id_prefix = 'se') {
             break;
         case 'select':
             echo '<select name="' . $field_name . '" id="' . $field_id . '" ' . $required . ' style="' . $style . '">';
-            echo '<option value="">-- Pilih --</option>';
+            echo '<option value="">-- Select --</option>';
             if (!empty($field['options'])) {
                 $options = array_map('trim', explode(',', $field['options']));
                 foreach ($options as $opt) {
@@ -145,7 +145,7 @@ function se_event_registration_form($atts) {
     if ($has_tel) { se_enqueue_intl_tel_input(); }
 
     if ($current >= $quota) {
-        echo '<p><strong>Pendaftaran ditutup (kuota penuh).</strong></p>';
+        echo '<p><strong>Registration closed (quota full).</strong></p>';
         return ob_get_clean();
     }
 
@@ -181,7 +181,7 @@ function se_event_registration_form($atts) {
         $email = $db_data['email'] ?? '';
         $name = $db_data['name'] ?? '';
 
-        // Cek apakah sudah pernah daftar
+        // Check if already registered
         $exists = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM $table_name WHERE event_id = %d AND email = %s",
             $event_id,
@@ -189,12 +189,12 @@ function se_event_registration_form($atts) {
         ));
 
         if ($exists > 0) {
-            echo '<p style="color:red;">Email ini sudah terdaftar untuk event ini.</p>';
+            echo '<p style="color:red;">This email is already registered for this event.</p>';
         } else {
             $wpdb->insert($table_name, $db_data);
             $submission_id = $wpdb->insert_id;
 
-            // Kirim email konfirmasi dengan detail event + QR tiket
+            // Send confirmation email with event details + QR ticket
             $event_title = get_the_title($event_id);
             $start_date = get_post_meta($event_id, '_se_event_start_date', true);
             $start_time = get_post_meta($event_id, '_se_event_start_time', true);
@@ -204,33 +204,45 @@ function se_event_registration_form($atts) {
             $display_date = !empty($start_date) ? date_i18n('l, d F Y', strtotime($start_date)) : '-';
             $event_url = get_permalink($event_id);
             $ticket_qr_html = se_get_ticket_qr_html($submission_id);
+            $feedback_url = get_post_meta($event_id, '_se_event_feedback_form_url', true);
 
-            $subject = 'Konfirmasi Pendaftaran - ' . $event_title;
+            $feedback_html = '';
+            if (!empty($feedback_url)) {
+                $feedback_html = "
+    <div style='background: #FFF8E1; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #FFC107;'>
+        <p style='margin: 0 0 10px; font-weight: bold;'>We Value Your Feedback!</p>
+        <p style='margin: 0 0 10px;'>Please take a moment to share your feedback about this event:</p>
+        <p style='margin: 0;'><a href='" . esc_url($feedback_url) . "' style='display:inline-block; background:#FFC107; color:#333; padding:10px 20px; text-decoration:none; border-radius:4px; font-weight:bold;'>Give Feedback</a></p>
+    </div>";
+            }
+
+            $subject = 'Registration Confirmation - ' . $event_title;
             $logo_html = se_get_email_logo_html();
             $message = "
 <html><body style='font-family: Arial, sans-serif; color: #333;'>
 <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
     {$logo_html}
-    <h2 style='color: #EA242A;'>Pendaftaran Berhasil!</h2>
-    <p>Halo <strong>{$name}</strong>,</p>
-    <p>Terima kasih telah mendaftar untuk event berikut:</p>
+    <h2 style='color: #EA242A;'>Registration Successful!</h2>
+    <p>Hello <strong>{$name}</strong>,</p>
+    <p>Thank you for registering for the following event:</p>
     <div style='background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 15px 0;'>
         <h3 style='margin-top: 0;'>{$event_title}</h3>
-        <p><strong>Tanggal:</strong> {$display_date}</p>
-        <p><strong>Jam:</strong> {$start_time} - {$end_time}</p>
-        <p><strong>Lokasi:</strong> {$location}</p>
+        <p><strong>Date:</strong> {$display_date}</p>
+        <p><strong>Time:</strong> {$start_time} - {$end_time}</p>
+        <p><strong>Location:</strong> {$location}</p>
     </div>
     {$ticket_qr_html}
-    <p><a href='{$event_url}' style='display:inline-block; background:#EA242A; color:white; padding:10px 20px; text-decoration:none; border-radius:4px;'>Lihat Detail Event</a></p>
+    {$feedback_html}
+    <p><a href='{$event_url}' style='display:inline-block; background:#EA242A; color:white; padding:10px 20px; text-decoration:none; border-radius:4px;'>View Event Details</a></p>
     <hr style='margin: 20px 0; border: none; border-top: 1px solid #ddd;'>
-    <p style='font-size: 12px; color: #888;'>Email ini dikirim otomatis, mohon tidak membalas email ini.</p>
+    <p style='font-size: 12px; color: #888;'>This email was sent automatically, please do not reply to this email.</p>
 </div>
 </body></html>";
 
             $headers = ['Content-Type: text/html; charset=UTF-8'];
             wp_mail($email, $subject, $message, $headers);
 
-            echo '<p style="color:green;">Pendaftaran berhasil! Cek email Anda untuk detail event.</p>';
+            echo '<p style="color:green;">Registration successful! Check your email for event details.</p>';
         }
     }
 
@@ -240,7 +252,7 @@ function se_event_registration_form($atts) {
             <?php foreach ($form_fields as $field): ?>
                 <?php se_render_form_field($field, 'se'); ?>
             <?php endforeach; ?>
-            <p><button type="submit" name="se_register" style="width:100%; padding: 12px 20px; background-color: #EA242A; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px;">Daftar Sekarang</button></p>
+            <p><button type="submit" name="se_register" style="width:100%; padding: 12px 20px; background-color: #EA242A; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px;">Register Now</button></p>
         </form>
     </div>
     <?php

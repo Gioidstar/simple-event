@@ -2,9 +2,9 @@
 // Helper: Default form fields
 function se_get_default_form_fields() {
     return [
-        ['key' => 'name',      'label' => 'Nama',      'type' => 'text',  'required' => true],
+        ['key' => 'name',      'label' => 'Name',       'type' => 'text',  'required' => true],
         ['key' => 'email',     'label' => 'Email',      'type' => 'email', 'required' => true],
-        ['key' => 'phone',     'label' => 'No HP',      'type' => 'tel',   'required' => true],
+        ['key' => 'phone',     'label' => 'Phone',      'type' => 'tel',   'required' => true],
         ['key' => 'company',   'label' => 'Company',    'type' => 'text',  'required' => false],
         ['key' => 'job_title', 'label' => 'Job Title',  'type' => 'text',  'required' => false],
     ];
@@ -19,16 +19,16 @@ function se_get_event_form_fields($event_id) {
     return $fields;
 }
 
-// Tambahkan meta box ke post type Event
+// Add meta boxes to Event post type
 function se_add_event_meta_boxes() {
-    add_meta_box('se_event_details', 'Detail Event', 'se_render_event_meta_box', 'event', 'normal', 'default');
-    add_meta_box('se_event_speakers', 'Pembicara & Moderator', 'se_render_speakers_meta_box', 'event', 'normal', 'default');
+    add_meta_box('se_event_details', 'Event Details', 'se_render_event_meta_box', 'event', 'normal', 'default');
+    add_meta_box('se_event_speakers', 'Speakers & Moderators', 'se_render_speakers_meta_box', 'event', 'normal', 'default');
     add_meta_box('se_event_target_audience', 'Target Audience', 'se_render_target_audience_meta_box', 'event', 'normal', 'default');
-    add_meta_box('se_event_form_fields', 'Konfigurasi Field Formulir', 'se_render_form_fields_meta_box', 'event', 'normal', 'default');
+    add_meta_box('se_event_form_fields', 'Form Field Configuration', 'se_render_form_fields_meta_box', 'event', 'normal', 'default');
 }
 add_action('add_meta_boxes', 'se_add_event_meta_boxes');
 
-// Enqueue media uploader di halaman edit event
+// Enqueue media uploader on event edit page
 function se_enqueue_admin_scripts($hook) {
     global $post_type;
     if (($hook === 'post.php' || $hook === 'post-new.php') && $post_type === 'event') {
@@ -37,7 +37,7 @@ function se_enqueue_admin_scripts($hook) {
 }
 add_action('admin_enqueue_scripts', 'se_enqueue_admin_scripts');
 
-// Render isi meta box
+// Render event details meta box
 function se_render_event_meta_box($post) {
     // Get existing values
     $start_date = get_post_meta($post->ID, '_se_event_start_date', true);
@@ -51,6 +51,7 @@ function se_render_event_meta_box($post) {
     $form_title = get_post_meta($post->ID, '_se_event_form_title', true);
     $form_subtitle = get_post_meta($post->ID, '_se_event_form_subtitle', true);
     $until_finished = get_post_meta($post->ID, '_se_event_until_finished', true);
+    $feedback_form_url = get_post_meta($post->ID, '_se_event_feedback_form_url', true);
 
     // Set default time values if empty
     if (empty($start_time)) $start_time = '09:00';
@@ -62,49 +63,54 @@ function se_render_event_meta_box($post) {
     <div class="se-meta-section">
         <p><label for="se_event_start_date"><strong>Start Date:</strong></label><br>
         <input type="date" id="se_event_start_date" name="se_event_start_date" value="<?php echo esc_attr($start_date); ?>" required>
-        <label for="se_event_start_time" style="margin-left: 10px;"><strong>Jam Mulai:</strong></label>
+        <label for="se_event_start_time" style="margin-left: 10px;"><strong>Start Time:</strong></label>
         <input type="time" id="se_event_start_time" name="se_event_start_time" value="<?php echo esc_attr($start_time); ?>" required></p>
 
         <p><label for="se_event_end_date"><strong>End Date:</strong></label>
         <label style="margin-left: 15px; cursor: pointer; background: <?php echo $until_finished ? '#EA242A' : '#f0f0f0'; ?>; color: <?php echo $until_finished ? '#fff' : '#333'; ?>; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s;" id="se_until_finished_label">
             <input type="checkbox" id="se_event_until_finished" name="se_event_until_finished" value="1" <?php checked($until_finished, '1'); ?> style="margin: 0;">
-            Sampai Selesai
+            Until Finished
         </label>
         <br>
         <span id="se_end_date_fields" style="<?php echo $until_finished ? 'display:none;' : ''; ?>">
             <input type="date" id="se_event_end_date" name="se_event_end_date" value="<?php echo esc_attr($end_date); ?>" required>
-            <label for="se_event_end_time" style="margin-left: 10px;"><strong>Jam Selesai:</strong></label>
+            <label for="se_event_end_time" style="margin-left: 10px;"><strong>End Time:</strong></label>
             <input type="time" id="se_event_end_time" name="se_event_end_time" value="<?php echo esc_attr($end_time); ?>" required>
         </span>
         <span id="se_until_finished_info" style="<?php echo $until_finished ? '' : 'display:none;'; ?> color: #EA242A; font-weight: 600; font-size: 13px;">
-            Event akan selesai pada tanggal Start Date (<span id="se_until_finished_date"><?php echo !empty($start_date) ? date_i18n('d M Y', strtotime($start_date)) : '-'; ?></span>)
+            Event will end on Start Date (<span id="se_until_finished_date"><?php echo !empty($start_date) ? date_i18n('d M Y', strtotime($start_date)) : '-'; ?></span>)
         </span>
         </p>
 
-        <p><label for="se_event_location"><strong>Lokasi:</strong></label><br>
+        <p><label for="se_event_location"><strong>Location:</strong></label><br>
         <input type="text" id="se_event_location" name="se_event_location" value="<?php echo esc_attr($location); ?>" style="width:100%;"></p>
 
-        <p><label for="se_event_quota"><strong>Kuota Maksimal:</strong></label><br>
+        <p><label for="se_event_quota"><strong>Maximum Quota:</strong></label><br>
         <input type="number" id="se_event_quota" name="se_event_quota" value="<?php echo esc_attr($quota); ?>" min="1"></p>
 
         <hr style="margin: 15px 0;">
         <p><label for="se_event_replay_url"><strong>YouTube Replay URL:</strong></label><br>
         <input type="url" id="se_event_replay_url" name="se_event_replay_url" value="<?php echo esc_attr($replay_url); ?>" style="width:100%;" placeholder="https://www.youtube.com/watch?v=...">
-        <small style="color:#666;">Isi URL video YouTube untuk replay event. Video hanya tampil setelah event selesai.</small></p>
+        <small style="color:#666;">Enter YouTube video URL for event replay. Video will only appear after the event has ended.</small></p>
 
         <hr style="margin: 15px 0;">
-        <p><label for="se_event_google_form_url"><strong>Google Form URL (Pendaftaran):</strong></label><br>
+        <p><label for="se_event_google_form_url"><strong>Google Form URL (Registration):</strong></label><br>
         <input type="url" id="se_event_google_form_url" name="se_event_google_form_url" value="<?php echo esc_attr($google_form_url); ?>" style="width:100%;" placeholder="https://docs.google.com/forms/d/e/FORM_ID/viewform">
-        <small style="color:#666;">Jika diisi, formulir pendaftaran akan menggunakan embed Google Form. Kosongkan untuk menggunakan formulir bawaan website. <strong>Hanya berlaku untuk registrasi, bukan replay.</strong></small></p>
+        <small style="color:#666;">If filled, the registration form will use an embedded Google Form. Leave empty to use the built-in website form. <strong>Only applies to registration, not replay.</strong></small></p>
 
         <hr style="margin: 15px 0;">
-        <p><label for="se_event_form_title"><strong>Judul Formulir (Custom):</strong></label><br>
-        <input type="text" id="se_event_form_title" name="se_event_form_title" value="<?php echo esc_attr($form_title); ?>" style="width:100%;" placeholder="Contoh: Jangan Lewatkan Sesi Eksklusif Ini!">
-        <small style="color:#666;">Judul besar yang tampil di atas formulir pendaftaran. Kosongkan untuk default.</small></p>
+        <p><label for="se_event_feedback_form_url"><strong>Feedback Form URL:</strong></label><br>
+        <input type="url" id="se_event_feedback_form_url" name="se_event_feedback_form_url" value="<?php echo esc_attr($feedback_form_url); ?>" style="width:100%;" placeholder="https://docs.google.com/forms/d/e/FORM_ID/viewform or any URL">
+        <small style="color:#666;">Optional. Supports Google Form, Typeform, or any feedback link. If filled, the link will be included in the confirmation email after registration or watching the replay.</small></p>
 
-        <p><label for="se_event_form_subtitle"><strong>Subtitle Formulir (Custom):</strong></label><br>
-        <textarea id="se_event_form_subtitle" name="se_event_form_subtitle" style="width:100%; height:60px;" placeholder="Contoh: Kesempatan bagi Anda yang membutuhkan IT Talent..."><?php echo esc_textarea($form_subtitle); ?></textarea>
-        <small style="color:#666;">Deskripsi singkat di bawah judul formulir. Kosongkan untuk default.</small></p>
+        <hr style="margin: 15px 0;">
+        <p><label for="se_event_form_title"><strong>Form Title (Custom):</strong></label><br>
+        <input type="text" id="se_event_form_title" name="se_event_form_title" value="<?php echo esc_attr($form_title); ?>" style="width:100%;" placeholder="e.g.: Don't Miss This Exclusive Session!">
+        <small style="color:#666;">Large title displayed above the registration form. Leave empty for default.</small></p>
+
+        <p><label for="se_event_form_subtitle"><strong>Form Subtitle (Custom):</strong></label><br>
+        <textarea id="se_event_form_subtitle" name="se_event_form_subtitle" style="width:100%; height:60px;" placeholder="e.g.: An opportunity for those who need IT Talent..."><?php echo esc_textarea($form_subtitle); ?></textarea>
+        <small style="color:#666;">Short description below the form title. Leave empty for default.</small></p>
     </div>
 
     <script>
@@ -125,7 +131,7 @@ function se_render_event_meta_box($post) {
         function formatDate(dateStr) {
             if (!dateStr) return '-';
             const d = new Date(dateStr + 'T00:00:00');
-            const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
             return d.getDate().toString().padStart(2,'0') + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
         }
 
@@ -163,7 +169,7 @@ function se_render_event_meta_box($post) {
             const endDate = new Date(`${endDateInput.value}T${endTimeInput.value}`);
 
             if (endDate < startDate) {
-                alert('Error: Tanggal selesai tidak boleh lebih awal dari tanggal mulai.');
+                alert('Error: End date cannot be earlier than start date.');
                 return false;
             }
             return true;
@@ -199,7 +205,7 @@ function se_render_event_meta_box($post) {
     <?php
 }
 
-// Render meta box Pembicara & Moderator
+// Render Speakers & Moderators meta box
 function se_render_speakers_meta_box($post) {
     $speakers = get_post_meta($post->ID, '_se_event_speakers', true);
     if (!is_array($speakers)) $speakers = [];
@@ -218,12 +224,12 @@ function se_render_speakers_meta_box($post) {
                             <span class="dashicons dashicons-camera" style="font-size:30px; color:#999;"></span>
                         <?php endif; ?>
                     </div>
-                    <button type="button" class="button button-small se-upload-photo">Upload Foto</button>
+                    <button type="button" class="button button-small se-upload-photo">Upload Photo</button>
                     <input type="hidden" name="se_speakers[<?php echo $i; ?>][photo_id]" value="<?php echo esc_attr($speaker['photo_id'] ?? ''); ?>" class="se-photo-id">
                 </div>
                 <div style="flex:1;">
-                    <p style="margin:0 0 6px;"><input type="text" name="se_speakers[<?php echo $i; ?>][name]" value="<?php echo esc_attr($speaker['name'] ?? ''); ?>" placeholder="Nama" style="width:100%;"></p>
-                    <p style="margin:0 0 6px;"><input type="text" name="se_speakers[<?php echo $i; ?>][job_title]" value="<?php echo esc_attr($speaker['job_title'] ?? ''); ?>" placeholder="Jabatan, Perusahaan" style="width:100%;"></p>
+                    <p style="margin:0 0 6px;"><input type="text" name="se_speakers[<?php echo $i; ?>][name]" value="<?php echo esc_attr($speaker['name'] ?? ''); ?>" placeholder="Name" style="width:100%;"></p>
+                    <p style="margin:0 0 6px;"><input type="text" name="se_speakers[<?php echo $i; ?>][job_title]" value="<?php echo esc_attr($speaker['job_title'] ?? ''); ?>" placeholder="Title, Company" style="width:100%;"></p>
                     <?php
                         $role = $speaker['role'] ?? 'speaker';
                         $is_custom = !in_array($role, ['speaker', 'moderator']);
@@ -231,24 +237,24 @@ function se_render_speakers_meta_box($post) {
                     <p style="margin:0 0 6px;"><select name="se_speakers[<?php echo $i; ?>][role_select]" class="se-role-select" style="width:100%;">
                         <option value="speaker" <?php selected(!$is_custom && $role === 'speaker'); ?>>Speaker</option>
                         <option value="moderator" <?php selected(!$is_custom && $role === 'moderator'); ?>>Moderator</option>
-                        <option value="_custom" <?php selected($is_custom); ?>>Lainnya...</option>
+                        <option value="_custom" <?php selected($is_custom); ?>>Other...</option>
                     </select></p>
-                    <p style="margin:0; <?php echo $is_custom ? '' : 'display:none;'; ?>" class="se-custom-role-wrap"><input type="text" name="se_speakers[<?php echo $i; ?>][role_custom]" value="<?php echo esc_attr($is_custom ? $role : ''); ?>" placeholder="Ketik role, misal: Panelist, Host, MC" style="width:100%;" class="se-custom-role"></p>
+                    <p style="margin:0; <?php echo $is_custom ? '' : 'display:none;'; ?>" class="se-custom-role-wrap"><input type="text" name="se_speakers[<?php echo $i; ?>][role_custom]" value="<?php echo esc_attr($is_custom ? $role : ''); ?>" placeholder="Type role, e.g.: Panelist, Host, MC" style="width:100%;" class="se-custom-role"></p>
                     <input type="hidden" name="se_speakers[<?php echo $i; ?>][role]" value="<?php echo esc_attr($role); ?>" class="se-role-value">
                 </div>
-                <button type="button" class="se-remove-speaker" style="position:absolute; top:8px; right:8px; background:#EA242A; color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:14px; line-height:24px; text-align:center;" title="Hapus">&times;</button>
+                <button type="button" class="se-remove-speaker" style="position:absolute; top:8px; right:8px; background:#EA242A; color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:14px; line-height:24px; text-align:center;" title="Remove">&times;</button>
             </div>
             <?php endforeach; ?>
         <?php endif; ?>
     </div>
-    <button type="button" id="se-add-speaker" class="button button-primary" style="margin-top:10px;">+ Tambah Pembicara</button>
+    <button type="button" id="se-add-speaker" class="button button-primary" style="margin-top:10px;">+ Add Speaker</button>
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         let speakerIndex = <?php echo count($speakers); ?>;
         const wrapper = document.getElementById('se-speakers-wrapper');
 
-        // Template row baru
+        // New row template
         function createSpeakerRow(idx) {
             const div = document.createElement('div');
             div.className = 'se-speaker-row';
@@ -258,32 +264,32 @@ function se_render_speakers_meta_box($post) {
                     <div class="se-speaker-preview" style="width:80px; height:80px; border-radius:50%; overflow:hidden; background:#ddd; margin-bottom:6px; display:flex; align-items:center; justify-content:center;">
                         <span class="dashicons dashicons-camera" style="font-size:30px; color:#999;"></span>
                     </div>
-                    <button type="button" class="button button-small se-upload-photo">Upload Foto</button>
+                    <button type="button" class="button button-small se-upload-photo">Upload Photo</button>
                     <input type="hidden" name="se_speakers[${idx}][photo_id]" value="" class="se-photo-id">
                 </div>
                 <div style="flex:1;">
-                    <p style="margin:0 0 6px;"><input type="text" name="se_speakers[${idx}][name]" value="" placeholder="Nama" style="width:100%;"></p>
-                    <p style="margin:0 0 6px;"><input type="text" name="se_speakers[${idx}][job_title]" value="" placeholder="Jabatan, Perusahaan" style="width:100%;"></p>
+                    <p style="margin:0 0 6px;"><input type="text" name="se_speakers[${idx}][name]" value="" placeholder="Name" style="width:100%;"></p>
+                    <p style="margin:0 0 6px;"><input type="text" name="se_speakers[${idx}][job_title]" value="" placeholder="Title, Company" style="width:100%;"></p>
                     <p style="margin:0 0 6px;"><select name="se_speakers[${idx}][role_select]" class="se-role-select" style="width:100%;">
                         <option value="speaker">Speaker</option>
                         <option value="moderator">Moderator</option>
-                        <option value="_custom">Lainnya...</option>
+                        <option value="_custom">Other...</option>
                     </select></p>
-                    <p style="margin:0; display:none;" class="se-custom-role-wrap"><input type="text" name="se_speakers[${idx}][role_custom]" value="" placeholder="Ketik role, misal: Panelist, Host, MC" style="width:100%;" class="se-custom-role"></p>
+                    <p style="margin:0; display:none;" class="se-custom-role-wrap"><input type="text" name="se_speakers[${idx}][role_custom]" value="" placeholder="Type role, e.g.: Panelist, Host, MC" style="width:100%;" class="se-custom-role"></p>
                     <input type="hidden" name="se_speakers[${idx}][role]" value="speaker" class="se-role-value">
                 </div>
-                <button type="button" class="se-remove-speaker" style="position:absolute; top:8px; right:8px; background:#EA242A; color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:14px; line-height:24px; text-align:center;" title="Hapus">&times;</button>
+                <button type="button" class="se-remove-speaker" style="position:absolute; top:8px; right:8px; background:#EA242A; color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:14px; line-height:24px; text-align:center;" title="Remove">&times;</button>
             `;
             return div;
         }
 
-        // Tambah speaker
+        // Add speaker
         document.getElementById('se-add-speaker').addEventListener('click', function() {
             wrapper.appendChild(createSpeakerRow(speakerIndex));
             speakerIndex++;
         });
 
-        // Hapus speaker
+        // Remove speaker
         wrapper.addEventListener('click', function(e) {
             if (e.target.classList.contains('se-remove-speaker')) {
                 e.target.closest('.se-speaker-row').remove();
@@ -317,7 +323,7 @@ function se_render_speakers_meta_box($post) {
             }
         });
 
-        // Upload foto
+        // Upload photo
         wrapper.addEventListener('click', function(e) {
             if (e.target.classList.contains('se-upload-photo')) {
                 e.preventDefault();
@@ -326,8 +332,8 @@ function se_render_speakers_meta_box($post) {
                 const previewDiv = row.querySelector('.se-speaker-preview');
 
                 const frame = wp.media({
-                    title: 'Pilih Foto Speaker',
-                    button: { text: 'Gunakan Foto' },
+                    title: 'Select Speaker Photo',
+                    button: { text: 'Use Photo' },
                     multiple: false,
                     library: { type: 'image' }
                 });
@@ -356,14 +362,14 @@ function se_render_target_audience_meta_box($post) {
         <?php if (!empty($audiences)): ?>
             <?php foreach ($audiences as $i => $audience): ?>
             <div class="se-audience-row" style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
-                <input type="text" name="se_target_audience[]" value="<?php echo esc_attr($audience); ?>" placeholder="Contoh: HR Professional, Business Owner" style="width:100%; padding:8px;">
-                <button type="button" class="se-remove-audience" style="background:#EA242A; color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:14px; line-height:24px; text-align:center; flex-shrink:0;" title="Hapus">&times;</button>
+                <input type="text" name="se_target_audience[]" value="<?php echo esc_attr($audience); ?>" placeholder="e.g.: HR Professional, Business Owner" style="width:100%; padding:8px;">
+                <button type="button" class="se-remove-audience" style="background:#EA242A; color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:14px; line-height:24px; text-align:center; flex-shrink:0;" title="Remove">&times;</button>
             </div>
             <?php endforeach; ?>
         <?php endif; ?>
     </div>
-    <button type="button" id="se-add-audience" class="button button-primary" style="margin-top:10px;">+ Tambah Target Audience</button>
-    <p style="margin-top:8px;"><small style="color:#666;">Tambahkan target audience untuk event ini. Contoh: HR Professional, Business Owner, IT Manager, dsb.</small></p>
+    <button type="button" id="se-add-audience" class="button button-primary" style="margin-top:10px;">+ Add Target Audience</button>
+    <p style="margin-top:8px;"><small style="color:#666;">Add target audience for this event. e.g.: HR Professional, Business Owner, IT Manager, etc.</small></p>
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -374,8 +380,8 @@ function se_render_target_audience_meta_box($post) {
             div.className = 'se-audience-row';
             div.style.cssText = 'display:flex; gap:10px; align-items:center; margin-bottom:8px;';
             div.innerHTML = `
-                <input type="text" name="se_target_audience[]" value="${value || ''}" placeholder="Contoh: HR Professional, Business Owner" style="width:100%; padding:8px;">
-                <button type="button" class="se-remove-audience" style="background:#EA242A; color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:14px; line-height:24px; text-align:center; flex-shrink:0;" title="Hapus">&times;</button>
+                <input type="text" name="se_target_audience[]" value="${value || ''}" placeholder="e.g.: HR Professional, Business Owner" style="width:100%; padding:8px;">
+                <button type="button" class="se-remove-audience" style="background:#EA242A; color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:14px; line-height:24px; text-align:center; flex-shrink:0;" title="Remove">&times;</button>
             `;
             return div;
         }
@@ -394,7 +400,7 @@ function se_render_target_audience_meta_box($post) {
     <?php
 }
 
-// Render meta box Konfigurasi Field Formulir
+// Render Form Field Configuration meta box
 function se_render_form_fields_meta_box($post) {
     $fields = se_get_event_form_fields($post->ID);
     $custom_counter = 0;
@@ -406,7 +412,7 @@ function se_render_form_fields_meta_box($post) {
     }
     $locked_keys = ['name', 'email'];
     ?>
-    <p style="color:#666; margin-bottom:15px;">Konfigurasi field yang tampil di formulir pendaftaran dan replay. Field <strong>Nama</strong> dan <strong>Email</strong> tidak dapat dihapus.</p>
+    <p style="color:#666; margin-bottom:15px;">Configure fields displayed in the registration and replay forms. <strong>Name</strong> and <strong>Email</strong> fields cannot be removed.</p>
     <div id="se-form-fields-wrapper">
         <?php foreach ($fields as $i => $field):
             $is_locked = in_array($field['key'], $locked_keys);
@@ -418,12 +424,12 @@ function se_render_form_fields_meta_box($post) {
                 <input type="text" name="se_form_fields[<?php echo $i; ?>][label]" value="<?php echo esc_attr($field['label']); ?>" style="width:100%; padding:6px;" required>
             </div>
             <div style="flex:1; min-width:100px;">
-                <label style="font-size:11px; color:#888;">Tipe</label>
+                <label style="font-size:11px; color:#888;">Type</label>
                 <select name="se_form_fields[<?php echo $i; ?>][type]" class="se-field-type-select" style="width:100%; padding:6px;" <?php echo $is_locked ? 'disabled' : ''; ?>>
                     <option value="text" <?php selected($field['type'], 'text'); ?>>Text</option>
                     <option value="email" <?php selected($field['type'], 'email'); ?>>Email</option>
-                    <option value="tel" <?php selected($field['type'], 'tel'); ?>>Telepon</option>
-                    <option value="number" <?php selected($field['type'], 'number'); ?>>Angka</option>
+                    <option value="tel" <?php selected($field['type'], 'tel'); ?>>Phone</option>
+                    <option value="number" <?php selected($field['type'], 'number'); ?>>Number</option>
                     <option value="textarea" <?php selected($field['type'], 'textarea'); ?>>Textarea</option>
                     <option value="select" <?php selected($field['type'], 'select'); ?>>Dropdown</option>
                     <option value="checkbox" <?php selected($field['type'], 'checkbox'); ?>>Checkbox</option>
@@ -434,7 +440,7 @@ function se_render_form_fields_meta_box($post) {
                 <?php endif; ?>
             </div>
             <div style="flex:0 0 auto; text-align:center;">
-                <label style="font-size:11px; color:#888;">Wajib</label><br>
+                <label style="font-size:11px; color:#888;">Required</label><br>
                 <input type="checkbox" name="se_form_fields[<?php echo $i; ?>][required]" value="1" <?php checked(!empty($field['required'])); ?> <?php echo $is_locked ? 'checked disabled' : ''; ?>>
                 <?php if ($is_locked): ?>
                     <input type="hidden" name="se_form_fields[<?php echo $i; ?>][required]" value="1">
@@ -442,19 +448,19 @@ function se_render_form_fields_meta_box($post) {
             </div>
             <div style="flex:0 0 auto;">
                 <?php if (!$is_locked): ?>
-                    <button type="button" class="se-remove-field" style="background:#EA242A; color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:14px; line-height:24px; text-align:center;" title="Hapus">&times;</button>
+                    <button type="button" class="se-remove-field" style="background:#EA242A; color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:14px; line-height:24px; text-align:center;" title="Remove">&times;</button>
                 <?php else: ?>
                     <span style="display:inline-block; width:24px; height:24px;"></span>
                 <?php endif; ?>
             </div>
             <div class="se-field-options" style="width:100%; <?php echo !in_array($field['type'] ?? '', ['select', 'checkbox', 'radio']) ? 'display:none;' : ''; ?>">
-                <label style="font-size:11px; color:#888;">Opsi (pisahkan dengan koma)</label>
-                <input type="text" name="se_form_fields[<?php echo $i; ?>][options]" value="<?php echo esc_attr($field['options'] ?? ''); ?>" style="width:100%; padding:6px;" placeholder="Opsi 1, Opsi 2, Opsi 3">
+                <label style="font-size:11px; color:#888;">Options (comma separated)</label>
+                <input type="text" name="se_form_fields[<?php echo $i; ?>][options]" value="<?php echo esc_attr($field['options'] ?? ''); ?>" style="width:100%; padding:6px;" placeholder="Option 1, Option 2, Option 3">
             </div>
         </div>
         <?php endforeach; ?>
     </div>
-    <button type="button" id="se-add-form-field" class="button button-primary" style="margin-top:10px;">+ Tambah Custom Field</button>
+    <button type="button" id="se-add-form-field" class="button button-primary" style="margin-top:10px;">+ Add Custom Field</button>
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -473,12 +479,12 @@ function se_render_form_fields_meta_box($post) {
                     <input type="text" name="se_form_fields[${idx}][label]" value="" style="width:100%; padding:6px;" required placeholder="Label field">
                 </div>
                 <div style="flex:1; min-width:100px;">
-                    <label style="font-size:11px; color:#888;">Tipe</label>
+                    <label style="font-size:11px; color:#888;">Type</label>
                     <select name="se_form_fields[${idx}][type]" class="se-field-type-select" style="width:100%; padding:6px;">
                         <option value="text">Text</option>
                         <option value="email">Email</option>
-                        <option value="tel">Telepon</option>
-                        <option value="number">Angka</option>
+                        <option value="tel">Phone</option>
+                        <option value="number">Number</option>
                         <option value="textarea">Textarea</option>
                         <option value="select">Dropdown</option>
                         <option value="checkbox">Checkbox</option>
@@ -486,15 +492,15 @@ function se_render_form_fields_meta_box($post) {
                     </select>
                 </div>
                 <div style="flex:0 0 auto; text-align:center;">
-                    <label style="font-size:11px; color:#888;">Wajib</label><br>
+                    <label style="font-size:11px; color:#888;">Required</label><br>
                     <input type="checkbox" name="se_form_fields[${idx}][required]" value="1">
                 </div>
                 <div style="flex:0 0 auto;">
-                    <button type="button" class="se-remove-field" style="background:#EA242A; color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:14px; line-height:24px; text-align:center;" title="Hapus">&times;</button>
+                    <button type="button" class="se-remove-field" style="background:#EA242A; color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:14px; line-height:24px; text-align:center;" title="Remove">&times;</button>
                 </div>
                 <div class="se-field-options" style="width:100%; display:none;">
-                    <label style="font-size:11px; color:#888;">Opsi (pisahkan dengan koma)</label>
-                    <input type="text" name="se_form_fields[${idx}][options]" value="" style="width:100%; padding:6px;" placeholder="Opsi 1, Opsi 2, Opsi 3">
+                    <label style="font-size:11px; color:#888;">Options (comma separated)</label>
+                    <input type="text" name="se_form_fields[${idx}][options]" value="" style="width:100%; padding:6px;" placeholder="Option 1, Option 2, Option 3">
                 </div>
             `;
             return div;
@@ -524,34 +530,34 @@ function se_render_form_fields_meta_box($post) {
     <?php
 }
 
-// Simpan metadata saat event disimpan
+// Save metadata when event is saved
 function se_save_event_meta($post_id) {
-    // Cek apakah ini autosave
+    // Check if this is autosave
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
-    
-    // Cek nonce untuk keamanan
+
+    // Check nonce for security
     if (!isset($_POST['se_event_meta_nonce']) || !wp_verify_nonce($_POST['se_event_meta_nonce'], 'se_event_meta_nonce')) {
         return;
     }
 
-    // Cek jenis post
+    // Check post type
     if (get_post_type($post_id) !== 'event') return;
-    
-    // Cek jika user memiliki izin
+
+    // Check if user has permission
     if (!current_user_can('edit_post', $post_id)) return;
 
-    // Handle "Sampai Selesai" checkbox
+    // Handle "Until Finished" checkbox
     $until_finished = !empty($_POST['se_event_until_finished']) ? '1' : '';
     update_post_meta($post_id, '_se_event_until_finished', $until_finished);
 
-    // Jika "Sampai Selesai" dicentang, set end date = start date dan end time ke 23:59
+    // If "Until Finished" is checked, set end date = start date and end time to 23:59
     if ($until_finished && isset($_POST['se_event_start_date'])) {
         $start = sanitize_text_field($_POST['se_event_start_date']);
         update_post_meta($post_id, '_se_event_end_date', $start);
         update_post_meta($post_id, '_se_event_end_time', '23:59');
     }
 
-    // Validasi tanggal (server-side) - skip jika "Sampai Selesai" aktif
+    // Validate dates (server-side) - skip if "Until Finished" is active
     if (!$until_finished && isset($_POST['se_event_start_date']) && isset($_POST['se_event_end_date']) &&
         isset($_POST['se_event_start_time']) && isset($_POST['se_event_end_time'])) {
 
@@ -563,7 +569,7 @@ function se_save_event_meta($post_id) {
             add_settings_error(
                 'se_event_dates',
                 'se_invalid_dates',
-                'Error: Tanggal selesai tidak boleh lebih awal dari tanggal mulai.',
+                'Error: End date cannot be earlier than start date.',
                 'error'
             );
 
@@ -573,7 +579,7 @@ function se_save_event_meta($post_id) {
         }
     }
 
-    // Simpan masing-masing meta jika tersedia
+    // Save individual meta if available
     if (isset($_POST['se_event_start_date'])) {
         update_post_meta($post_id, '_se_event_start_date', sanitize_text_field($_POST['se_event_start_date']));
     }
@@ -582,7 +588,7 @@ function se_save_event_meta($post_id) {
         update_post_meta($post_id, '_se_event_start_time', sanitize_text_field($_POST['se_event_start_time']));
     }
 
-    // Simpan end date/time hanya jika bukan "Sampai Selesai"
+    // Save end date/time only if not "Until Finished"
     if (!$until_finished) {
         if (isset($_POST['se_event_end_date'])) {
             update_post_meta($post_id, '_se_event_end_date', sanitize_text_field($_POST['se_event_end_date']));
@@ -609,6 +615,10 @@ function se_save_event_meta($post_id) {
         update_post_meta($post_id, '_se_event_google_form_url', esc_url_raw($_POST['se_event_google_form_url']));
     }
 
+    if (isset($_POST['se_event_feedback_form_url'])) {
+        update_post_meta($post_id, '_se_event_feedback_form_url', esc_url_raw($_POST['se_event_feedback_form_url']));
+    }
+
     if (isset($_POST['se_event_form_title'])) {
         update_post_meta($post_id, '_se_event_form_title', sanitize_text_field($_POST['se_event_form_title']));
     }
@@ -617,7 +627,7 @@ function se_save_event_meta($post_id) {
         update_post_meta($post_id, '_se_event_form_subtitle', sanitize_textarea_field($_POST['se_event_form_subtitle']));
     }
 
-    // Simpan speakers
+    // Save speakers
     if (isset($_POST['se_speakers']) && is_array($_POST['se_speakers'])) {
         $speakers = [];
         foreach ($_POST['se_speakers'] as $speaker) {
@@ -637,7 +647,7 @@ function se_save_event_meta($post_id) {
         update_post_meta($post_id, '_se_event_speakers', []);
     }
 
-    // Simpan target audience
+    // Save target audience
     if (isset($_POST['se_target_audience']) && is_array($_POST['se_target_audience'])) {
         $audiences = [];
         foreach ($_POST['se_target_audience'] as $audience) {
@@ -649,7 +659,7 @@ function se_save_event_meta($post_id) {
         update_post_meta($post_id, '_se_event_target_audience', []);
     }
 
-    // Simpan form fields config
+    // Save form fields config
     if (isset($_POST['se_form_fields']) && is_array($_POST['se_form_fields'])) {
         $form_fields = [];
         foreach ($_POST['se_form_fields'] as $field) {
@@ -681,7 +691,7 @@ function se_save_event_meta($post_id) {
         unset($ff);
 
         if (!$has_name) {
-            array_unshift($form_fields, ['key' => 'name', 'label' => 'Nama', 'type' => 'text', 'required' => true]);
+            array_unshift($form_fields, ['key' => 'name', 'label' => 'Name', 'type' => 'text', 'required' => true]);
         }
         if (!$has_email) {
             array_splice($form_fields, 1, 0, [['key' => 'email', 'label' => 'Email', 'type' => 'email', 'required' => true]]);

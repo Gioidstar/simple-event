@@ -1,8 +1,8 @@
 <?php
 /**
  * Replay Form Shortcode
- * Menampilkan form "Watch the Replay" untuk event yang sudah selesai.
- * Setelah submit, tampilkan embed YouTube video.
+ * Display form "Watch the Replay" for events that have ended.
+ * After submit, display embedded YouTube video.
  */
 
 function se_extract_youtube_id($url) {
@@ -60,7 +60,7 @@ function se_event_replay_form($atts) {
     $show_video = false;
     $form_submitted = false;
 
-    // Cek apakah form baru saja disubmit
+    // Check if form was just submitted
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['se_replay_register'])) {
         $db_data = [
             'event_id'   => $event_id,
@@ -94,7 +94,7 @@ function se_event_replay_form($atts) {
         $email = $db_data['email'] ?? '';
         $name = $db_data['name'] ?? '';
 
-        // Cek apakah email sudah pernah submit replay untuk event ini
+        // Check if email has already submitted replay for this event
         $exists = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM $table_name WHERE event_id = %d AND email = %s AND form_type = %s",
             $event_id,
@@ -103,17 +103,28 @@ function se_event_replay_form($atts) {
         ));
 
         if ($exists > 0) {
-            // Sudah pernah daftar, langsung tampilkan video
+            // Already registered, show video directly
             $show_video = true;
             $form_submitted = true;
         } else {
             $wpdb->insert($table_name, $db_data);
             $submission_id = $wpdb->insert_id;
 
-            // Kirim email dengan link video replay + QR tiket
+            // Send email with replay video link + QR ticket
             $event_title = get_the_title($event_id);
             $event_url = get_permalink($event_id);
             $ticket_qr_html = se_get_ticket_qr_html($submission_id);
+            $feedback_url = get_post_meta($event_id, '_se_event_feedback_form_url', true);
+
+            $feedback_html = '';
+            if (!empty($feedback_url)) {
+                $feedback_html = "
+    <div style='background: #FFF8E1; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #FFC107;'>
+        <p style='margin: 0 0 10px; font-weight: bold;'>We Value Your Feedback!</p>
+        <p style='margin: 0 0 10px;'>Please take a moment to share your feedback about this event:</p>
+        <p style='margin: 0;'><a href='" . esc_url($feedback_url) . "' style='display:inline-block; background:#FFC107; color:#333; padding:10px 20px; text-decoration:none; border-radius:4px; font-weight:bold;'>Give Feedback</a></p>
+    </div>";
+            }
 
             $subject = 'Replay Video - ' . $event_title;
             $logo_html = se_get_email_logo_html();
@@ -122,18 +133,19 @@ function se_event_replay_form($atts) {
 <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
     {$logo_html}
     <h2 style='color: #2563EB;'>Replay Video Event</h2>
-    <p>Halo <strong>{$name}</strong>,</p>
-    <p>Terima kasih telah mendaftar untuk menonton replay event:</p>
+    <p>Hello <strong>{$name}</strong>,</p>
+    <p>Thank you for registering to watch the event replay:</p>
     <div style='background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 15px 0;'>
         <h3 style='margin-top: 0;'>{$event_title}</h3>
     </div>
     {$ticket_qr_html}
-    <p>Silakan tonton video replay melalui link di bawah ini:</p>
-    <p><a href='" . esc_url($replay_url) . "' style='display:inline-block; background:#2563EB; color:white; padding:10px 20px; text-decoration:none; border-radius:4px;'>Tonton Video Replay</a></p>
-    <p style='margin-top:10px;'>Atau kunjungi halaman event untuk menonton langsung:</p>
+    {$feedback_html}
+    <p>Please watch the replay video via the link below:</p>
+    <p><a href='" . esc_url($replay_url) . "' style='display:inline-block; background:#2563EB; color:white; padding:10px 20px; text-decoration:none; border-radius:4px;'>Watch Replay Video</a></p>
+    <p style='margin-top:10px;'>Or visit the event page to watch directly:</p>
     <p><a href='{$event_url}'>{$event_url}</a></p>
     <hr style='margin: 20px 0; border: none; border-top: 1px solid #ddd;'>
-    <p style='font-size: 12px; color: #888;'>Email ini dikirim otomatis, mohon tidak membalas email ini.</p>
+    <p style='font-size: 12px; color: #888;'>This email was sent automatically, please do not reply to this email.</p>
 </div>
 </body></html>";
 

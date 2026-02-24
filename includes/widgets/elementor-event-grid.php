@@ -39,7 +39,7 @@ class SE_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
             'taxonomy'   => 'event_category',
             'hide_empty' => false,
         ]);
-        $cat_options = ['' => 'Semua Kategori'];
+        $cat_options = ['' => 'All Categories'];
         if (!is_wp_error($categories)) {
             foreach ($categories as $cat) {
                 $cat_options[$cat->slug] = $cat->name;
@@ -47,7 +47,7 @@ class SE_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         }
 
         $this->add_control('category', [
-            'label'   => 'Kategori Event',
+            'label'   => 'Event Category',
             'type'    => \Elementor\Controls_Manager::SELECT2,
             'options' => $cat_options,
             'default' => '',
@@ -56,10 +56,10 @@ class SE_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('status', [
-            'label'   => 'Status Event',
+            'label'   => 'Event Status',
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
-                'all'      => 'Semua',
+                'all'      => 'All',
                 'upcoming' => 'Upcoming',
                 'past'     => 'Past / Replay',
             ],
@@ -67,39 +67,39 @@ class SE_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('per_page', [
-            'label'   => 'Jumlah Event',
+            'label'   => 'Number of Events',
             'type'    => \Elementor\Controls_Manager::NUMBER,
             'default' => 6,
             'min'     => -1,
             'max'     => 50,
-            'description' => '-1 untuk menampilkan semua',
+            'description' => '-1 to show all',
         ]);
 
         $this->add_control('orderby', [
-            'label'   => 'Urut Berdasarkan',
+            'label'   => 'Sort By',
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
-                'date'  => 'Tanggal Event',
-                'title' => 'Judul',
+                'date'  => 'Event Date',
+                'title' => 'Title',
             ],
             'default' => 'date',
         ]);
 
         $this->add_control('order', [
-            'label'   => 'Urutan',
+            'label'   => 'Order',
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
-                'DESC' => 'Terbaru Dulu',
-                'ASC'  => 'Terlama Dulu',
+                'DESC' => 'Newest First',
+                'ASC'  => 'Oldest First',
             ],
             'default' => 'DESC',
         ]);
 
         $this->add_control('show_filter', [
-            'label'   => 'Tampilkan Filter Kategori',
+            'label'   => 'Show Category Filter',
             'type'    => \Elementor\Controls_Manager::SWITCHER,
-            'label_on'  => 'Ya',
-            'label_off' => 'Tidak',
+            'label_on'  => 'Yes',
+            'label_off' => 'No',
             'return_value' => 'yes',
             'default' => 'no',
         ]);
@@ -113,7 +113,7 @@ class SE_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         ]);
 
         $this->add_responsive_control('columns', [
-            'label'   => 'Kolom',
+            'label'   => 'Columns',
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
                 '1' => '1',
@@ -166,7 +166,7 @@ class SE_Elementor_Event_Grid_Widget extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('image_height', [
-            'label'   => 'Tinggi Gambar',
+            'label'   => 'Image Height',
             'type'    => \Elementor\Controls_Manager::SLIDER,
             'range'   => ['px' => ['min' => 100, 'max' => 400]],
             'default' => ['size' => 200, 'unit' => 'px'],

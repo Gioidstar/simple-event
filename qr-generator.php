@@ -1,5 +1,5 @@
 <?php
-// QR Code Generator - Lite (tanpa library)
+// QR Code Generator - Lite (no library)
 
 // Parameter
 $data = isset($_GET['data']) ? trim($_GET['data']) : '';
@@ -7,9 +7,9 @@ if ($data === '') {
     die('No data provided.');
 }
 
-// Gunakan fungsi hash untuk membuat pola kotak sederhana (tidak full QR Code spek, tapi cukup untuk visual ID)
+// Use hash function to create simple box pattern (not full QR Code spec, but sufficient for visual ID)
 $hash = md5($data);
-$size = 10; // pixel size per "blok"
+$size = 10; // pixel size per "block"
 $cols = 21;
 $rows = 21;
 $img_size = $size * $cols;
@@ -20,10 +20,10 @@ $image = imagecreate($img_size, $img_size);
 $white = imagecolorallocate($image, 255, 255, 255);
 $black = imagecolorallocate($image, 0, 0, 0);
 
-// Gambar "QR" kotak kotak berdasarkan hash
+// Draw QR boxes based on hash
 for ($y = 0; $y < $rows; $y++) {
     for ($x = 0; $x < $cols; $x++) {
-        // Ambil nilai dari hash
+        // Get value from hash
         $pos = ($y * $cols + $x) % strlen($hash);
         $char = $hash[$pos];
         if (hexdec($char) % 2 === 0) {
@@ -39,7 +39,7 @@ for ($y = 0; $y < $rows; $y++) {
     }
 }
 
-// Optional: Tambahkan teks di bawah
+// Optional: Add text below
 imagestring($image, 2, 5, $img_size - 15, $data, $black);
 
 imagepng($image);

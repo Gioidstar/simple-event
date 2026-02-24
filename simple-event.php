@@ -1,17 +1,20 @@
 <?php
 /**
  * Plugin Name: Simple Event
- * Description: Plugin untuk membuat event dan form pendaftaran dengan sistem submission.
- * Version: 1.0.1
+ * Plugin URI: https://github.com/Gioidstar/simple-event
+ * Description: Plugin to create events and registration forms with submission system.
+ * Version: 2.1.0
  * Author: Gio fandi
+ * Author URI: https://github.com/Gioidstar
  */
 
 
 // Load all includes
+require_once plugin_dir_path(__FILE__) . 'includes/class-github-updater.php';
 require_once plugin_dir_path(__FILE__) . 'includes/post-types.php';
 require_once plugin_dir_path(__FILE__) . 'includes/meta-boxes.php';
 require_once plugin_dir_path(__FILE__) . 'includes/registration-form.php';
-require_once plugin_dir_path(__FILE__) . 'includes/shortcode-event-list.php';// menampilkan data submission di admin
+require_once plugin_dir_path(__FILE__) . 'includes/shortcode-event-list.php'; // display submission data in admin
 require_once plugin_dir_path(__FILE__) . 'includes/replay-form.php';
 require_once plugin_dir_path(__FILE__) . 'includes/ticket.php';
 
@@ -22,12 +25,12 @@ function se_register_elementor_widgets($widgets_manager) {
 }
 add_action('elementor/widgets/register', 'se_register_elementor_widgets');
 
-// Auto-migrasi kolom form_type jika belum ada
+// Auto-migrate form_type column if not exists
 function se_maybe_migrate_form_type_column() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'event_submissions';
 
-    // Cek apakah tabel ada
+    // Check if table exists
     if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") !== $table_name) {
         return;
     }
@@ -41,7 +44,7 @@ function se_maybe_migrate_form_type_column() {
 }
 add_action('init', 'se_maybe_migrate_form_type_column');
 
-// Auto-migrasi kolom custom_fields jika belum ada
+// Auto-migrate custom_fields column if not exists
 function se_maybe_migrate_custom_fields_column() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'event_submissions';
@@ -71,7 +74,7 @@ function simple_event_template($template) {
 }
 add_filter('single_template', 'simple_event_template');
 
-// Buat tabel event_submissions saat plugin diaktifkan
+// Create event_submissions table on plugin activation
 register_activation_hook(__FILE__, 'se_create_event_submission_table');
 
 function se_create_event_submission_table() {
@@ -80,7 +83,7 @@ function se_create_event_submission_table() {
     $table_name = $wpdb->prefix . 'event_submissions';
     $charset_collate = $wpdb->get_charset_collate();
 
-    // Buat tabel jika belum ada
+    // Create table if not exists
     $sql = "CREATE TABLE $table_name (
         id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
         event_id BIGINT(20) UNSIGNED NOT NULL,
@@ -96,9 +99,9 @@ function se_create_event_submission_table() {
     ) $charset_collate;";
 
     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-    dbDelta($sql); // Aman digunakan berkali-kali
+    dbDelta($sql); // Safe to use multiple times
 
-    // Tambahkan kolom jika belum tersedia (jaga-jaga)
+    // Add columns if not available (safety check)
     $columns = $wpdb->get_results("SHOW COLUMNS FROM $table_name", ARRAY_A);
     $existing_columns = array_column($columns, 'Field');
 
@@ -125,4 +128,6 @@ function se_create_event_submission_table() {
     }
 }
 
-
+// Initialize GitHub auto-updater
+$se_updater = new SE_GitHub_Updater(__FILE__);
+$se_updater->set_repository('Gioidstar', 'simple-event');

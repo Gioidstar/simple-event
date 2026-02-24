@@ -37,11 +37,11 @@ function se_register_event_post_type() {
 }
 add_action('init', 'se_register_event_post_type');
 
-// Tambahkan meta box untuk menampilkan pendaftar
+// Add meta box to display registrants
 function se_add_submission_meta_box() {
     add_meta_box(
         'se_event_submissions',
-        'Daftar Pendaftar',
+        'Registrant List',
         'se_render_submission_meta_box',
         'event',
         'normal',
@@ -50,16 +50,16 @@ function se_add_submission_meta_box() {
 }
 add_action('add_meta_boxes', 'se_add_submission_meta_box');
 
-// Render isi meta box
+// Render meta box content
 function se_render_submission_meta_box($post) {
     global $wpdb;
 
     $table_name = $wpdb->prefix . 'event_submissions';
     $event_id = $post->ID;
 
-    // Notifikasi jika pendaftar dihapus
+    // Notification if registrant is deleted
     if (isset($_GET['message']) && $_GET['message'] === 'deleted') {
-        echo '<div class="notice notice-success is-dismissible"><p>Pendaftar berhasil dihapus.</p></div>';
+        echo '<div class="notice notice-success is-dismissible"><p>Registrant successfully deleted.</p></div>';
     }
 
     // Pagination setup
@@ -67,18 +67,18 @@ function se_render_submission_meta_box($post) {
     $paged = isset($_GET['paged_submission']) ? max(1, intval($_GET['paged_submission'])) : 1;
     $offset = ($paged - 1) * $per_page;
 
-    // Hitung total
+    // Count total
     $total = $wpdb->get_var($wpdb->prepare(
         "SELECT COUNT(*) FROM $table_name WHERE event_id = %d",
         $event_id
     ));
     $total_pages = ceil($total / $per_page);
 
-    // Tombol Export
+    // Export button
     echo '<p>';
     echo '<a href="' . esc_url(add_query_arg(['se_export' => 'csv', 'event_id' => $event_id])) . '" class="button button-primary" style="margin-right:10px;">Export CSV</a>';
 
-    // Ambil data sesuai pagination
+    // Get data with pagination
     $results = $wpdb->get_results($wpdb->prepare(
         "SELECT * FROM $table_name WHERE event_id = %d ORDER BY created_at DESC LIMIT %d OFFSET %d",
         $event_id, $per_page, $offset
@@ -93,7 +93,7 @@ function se_render_submission_meta_box($post) {
         foreach ($form_fields as $field) {
             echo '<th>' . esc_html($field['label']) . '</th>';
         }
-        echo '<th>Tipe</th><th>Waktu Daftar</th><th>QR Ticket</th><th>Aksi</th>';
+        echo '<th>Type</th><th>Registration Time</th><th>QR Ticket</th><th>Action</th>';
         echo '</tr></thead>';
         echo '<tbody>';
         foreach ($results as $row) {
@@ -121,7 +121,7 @@ function se_render_submission_meta_box($post) {
                 'se_delete_submission_' . $row->id
             );
 
-            echo '<td><a href="' . esc_url($delete_url) . '" class="button button-small" onclick="return confirm(\'Yakin ingin menghapus pendaftar ini?\')">Hapus</a></td>';
+            echo '<td><a href="' . esc_url($delete_url) . '" class="button button-small" onclick="return confirm(\'Are you sure you want to delete this registrant?\')">Delete</a></td>';
             echo '</tr>';
         }
         echo '</tbody></table>';
@@ -142,23 +142,23 @@ function se_render_submission_meta_box($post) {
         }
         echo '</div>';
     } else {
-        echo '<p>Belum ada pendaftar.</p>';
+        echo '<p>No registrants yet.</p>';
     }
 }
 
-// Handler untuk menghapus submission
+// Handler to delete submission
 add_action('admin_post_se_delete_submission', 'se_handle_delete_submission');
 
 function se_handle_delete_submission() {
     if (!current_user_can('edit_posts') || !isset($_GET['submission_id']) || !isset($_GET['event_id'])) {
-        wp_die('Akses tidak sah');
+        wp_die('Unauthorized access');
     }
 
     $submission_id = intval($_GET['submission_id']);
     $event_id = intval($_GET['event_id']);
 
     if (!wp_verify_nonce($_GET['_wpnonce'], 'se_delete_submission_' . $submission_id)) {
-        wp_die('Nonce tidak valid');
+        wp_die('Invalid nonce');
     }
 
     global $wpdb;
@@ -179,7 +179,7 @@ function se_handle_csv_export() {
     }
 
     if (!current_user_can('edit_posts')) {
-        wp_die('Akses tidak sah');
+        wp_die('Unauthorized access');
     }
 
     $event_id = intval($_GET['event_id']);
@@ -197,7 +197,7 @@ function se_handle_csv_export() {
 
     // Set headers for CSV download
     header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="pendaftar-' . $event_title . '-' . date('Y-m-d') . '.csv"');
+    header('Content-Disposition: attachment; filename="registrants-' . $event_title . '-' . date('Y-m-d') . '.csv"');
 
     $output = fopen('php://output', 'w');
 
@@ -209,8 +209,8 @@ function se_handle_csv_export() {
     foreach ($form_fields as $field) {
         $headers[] = $field['label'];
     }
-    $headers[] = 'Tipe';
-    $headers[] = 'Waktu Daftar';
+    $headers[] = 'Type';
+    $headers[] = 'Registration Time';
     fputcsv($output, $headers);
 
     // Data rows

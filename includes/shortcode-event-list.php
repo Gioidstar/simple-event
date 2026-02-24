@@ -8,12 +8,12 @@
  *   [event_list category="workshop,seminar" columns="2" per_page="-1" status="all" orderby="date"]
  *
  * Attributes:
- *   category  - Slug kategori event (comma-separated untuk multiple). Kosong = semua.
- *   columns   - Jumlah kolom grid: 1, 2, 3, 4 (default: 3)
- *   per_page  - Jumlah event ditampilkan. -1 = semua (default: -1)
+ *   category  - Event category slug (comma-separated for multiple). Empty = all.
+ *   columns   - Number of grid columns: 1, 2, 3, 4 (default: 3)
+ *   per_page  - Number of events displayed. -1 = all (default: -1)
  *   status    - Filter status: "upcoming", "past", "all" (default: "all")
- *   orderby   - Urutan: "date", "title" (default: "date")
- *   order     - ASC atau DESC (default: "DESC")
+ *   orderby   - Sort by: "date", "title" (default: "date")
+ *   order     - ASC or DESC (default: "DESC")
  */
 
 function se_event_list_shortcode($atts) {
@@ -105,7 +105,7 @@ function se_event_list_shortcode($atts) {
         if (!is_wp_error($filter_cats) && !empty($filter_cats)) {
             $grid_id = 'se-grid-' . wp_rand(1000, 9999);
             echo '<div class="se-filter-wrap" data-grid="' . $grid_id . '">';
-            echo '<button class="se-filter-btn active" data-cat="all">Semua</button>';
+            echo '<button class="se-filter-btn active" data-cat="all">All</button>';
             foreach ($filter_cats as $fcat) {
                 echo '<button class="se-filter-btn" data-cat="' . esc_attr($fcat->slug) . '">' . esc_html($fcat->name) . '</button>';
             }
@@ -148,7 +148,7 @@ function se_event_list_shortcode($atts) {
                 $btn_text  = 'Watch the Replay';
                 $btn_class = 'se-btn-replay';
             } elseif ($is_ended) {
-                $btn_text  = 'Acara Sudah Selesai';
+                $btn_text  = 'Event Has Ended';
                 $btn_class = 'se-btn-ended';
             } else {
                 $btn_text  = 'Register Now';
@@ -196,7 +196,7 @@ function se_event_list_shortcode($atts) {
 
         echo '</div>';
     } else {
-        echo '<p class="se-no-events">Belum ada event.</p>';
+        echo '<p class="se-no-events">No events found.</p>';
     }
 
     // Filter JS (only once)

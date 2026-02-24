@@ -44,8 +44,8 @@ if (have_posts()) :
 
     // Format display date
     $display_date = !empty($event_start_date) ? date_i18n('l, d F Y', strtotime($event_start_date)) : '';
-    // Format end date display for "Sampai Selesai"
-    $display_end_date = $until_finished ? 'Selesai' : (!empty($event_end_date) ? date_i18n('l, d F Y', strtotime($event_end_date)) : '');
+    // Format end date display for "Until Finished"
+    $display_end_date = $until_finished ? 'Finished' : (!empty($event_end_date) ? date_i18n('l, d F Y', strtotime($event_end_date)) : '');
 ?>
 
 <style>
@@ -112,7 +112,7 @@ if (have_posts()) :
                 <img src="<?php echo esc_url($event_image); ?>" alt="<?php the_title(); ?>" style="width: 100%; border-radius: 8px;">
                 <!-- Share buttons -->
                 <div style="margin-top: 1.2rem;">
-                    <p style="font-weight: 600; font-size: 0.9rem; color: #555; margin-bottom: 10px;">Bagikan Event:</p>
+                    <p style="font-weight: 600; font-size: 0.9rem; color: #555; margin-bottom: 10px;">Share Event:</p>
                     <?php
                         $share_url = urlencode(get_permalink());
                         $share_title = urlencode(get_the_title());
@@ -130,10 +130,10 @@ if (have_posts()) :
                         <a href="https://twitter.com/intent/tweet?url=<?php echo $share_url; ?>&text=<?php echo $share_title; ?>" target="_blank" title="X (Twitter)" style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:50%; background:#000; color:#fff; text-decoration:none; transition:opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                         </a>
-                        <button onclick="navigator.clipboard.writeText('<?php echo esc_js(get_permalink()); ?>').then(function(){var b=document.getElementById('se-copy-tooltip');b.style.opacity='1';setTimeout(function(){b.style.opacity='0'},2000)})" title="Salin Link" style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:50%; background:#6b7280; color:#fff; border:none; cursor:pointer; transition:opacity 0.2s; position:relative;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        <button onclick="navigator.clipboard.writeText('<?php echo esc_js(get_permalink()); ?>').then(function(){var b=document.getElementById('se-copy-tooltip');b.style.opacity='1';setTimeout(function(){b.style.opacity='0'},2000)})" title="Copy Link" style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:50%; background:#6b7280; color:#fff; border:none; cursor:pointer; transition:opacity 0.2s; position:relative;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                         </button>
-                        <span id="se-copy-tooltip" style="font-size:12px; color:#059669; font-weight:600; align-self:center; opacity:0; transition:opacity 0.3s;">Link disalin!</span>
+                        <span id="se-copy-tooltip" style="font-size:12px; color:#059669; font-weight:600; align-self:center; opacity:0; transition:opacity 0.3s;">Link copied!</span>
                     </div>
                 </div>
             </div>
@@ -141,39 +141,39 @@ if (have_posts()) :
 
         <div style="flex: 2 1 500px;">
             <h1 style="font-size: 2rem; margin-bottom: 0.5rem;"><?php the_title(); ?></h1>
-            <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Detail Event</h2>
+            <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Event Details</h2>
             <div style="background-color: #f9f9f9; padding: 1rem; border-radius: 8px;">
-                <p><strong>📅 Tanggal:</strong> <?php echo esc_html($display_date); ?><?php if ($until_finished): ?> <span style="background: #EA242A; color: #fff; padding: 2px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">Selesai</span><?php endif; ?></p>
+                <p><strong>📅 Date:</strong> <?php echo esc_html($display_date); ?><?php if ($until_finished): ?> <span style="background: #EA242A; color: #fff; padding: 2px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">Finished</span><?php endif; ?></p>
                 <?php if (!$until_finished): ?>
-                <p><strong>🕒 Jam:</strong> <?php echo esc_html($event_start_time); ?> - <?php echo esc_html($event_end_time); ?></p>
+                <p><strong>🕒 Time:</strong> <?php echo esc_html($event_start_time); ?> - <?php echo esc_html($event_end_time); ?></p>
                 <?php else: ?>
-                <p><strong>🕒 Jam:</strong> <?php echo esc_html($event_start_time); ?> - Selesai</p>
+                <p><strong>🕒 Time:</strong> <?php echo esc_html($event_start_time); ?> - Finished</p>
                 <?php endif; ?>
-                <p><strong>📍 Lokasi:</strong> <?php echo esc_html($event_location); ?></p>
+                <p><strong>📍 Location:</strong> <?php echo esc_html($event_location); ?></p>
             </div>
 
             <!-- Conditional Button based on event date -->
             <?php if ($is_event_ended && $has_replay): ?>
                 <a href="#se-form-section" class="replay-button">▶ Watch the Replay</a>
             <?php elseif ($is_event_ended): ?>
-                <button class="event-ended-button" disabled>Acara Sudah Selesai</button>
+                <button class="event-ended-button" disabled>Event Has Ended</button>
             <?php else: ?>
-                <a href="#se-form-section" class="reservation-button">Reservasi Sekarang</a>
+                <a href="#se-form-section" class="reservation-button">Register Now</a>
             <?php endif; ?>
         </div>
     </div>
 
-    <!-- Deskripsi  -->
+    <!-- Description  -->
     <div style="margin-top: 3rem;"></div>
-        <h2 style="font-size: 1.5rem; margin-top: 2rem;">Deskripsi Event</h2>
+        <h2 style="font-size: 1.5rem; margin-top: 2rem;">Event Description</h2>
         <div style="background-color: #f9f9f9; padding: 1rem; border-radius: 8px;">
             <p> <?php the_content(); ?></p>
         </div>
 
-        <!-- Pembicara & Moderator -->
+        <!-- Speakers & Moderators -->
         <?php if (!empty($speakers)): ?>
         <div style="margin-top: 2rem;">
-            <h2 style="font-size: 1.5rem; text-align: center; margin-bottom: 0.5rem;">Pembicara & Moderator</h2>
+            <h2 style="font-size: 1.5rem; text-align: center; margin-bottom: 0.5rem;">Speakers & Moderators</h2>
             <div style="width: 60px; height: 3px; background: #333; margin: 0 auto 1.5rem;"></div>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem;">
                 <?php foreach ($speakers as $spk):
@@ -223,13 +223,13 @@ if (have_posts()) :
                 <div style="width: 60px; height: 3px; background: #2563EB; margin: 0 auto 1.5rem;"></div>
                 <?php echo do_shortcode('[event_replay_form id="' . get_the_ID() . '"]'); ?>
             <?php elseif ($is_event_ended): ?>
-                <h2 style="font-size: 1.5rem; text-align: center;">Pendaftaran</h2>
+                <h2 style="font-size: 1.5rem; text-align: center;">Registration</h2>
                 <div style="background-color: #f9f9f9; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
-                    <p style="text-align: center;">Acara ini telah berakhir dan pendaftaran sudah ditutup.</p>
+                    <p style="text-align: center;">This event has ended and registration is closed.</p>
                 </div>
             <?php else: ?>
                 <?php
-                    $reg_title = !empty($form_title) ? $form_title : 'Formulir Pendaftaran';
+                    $reg_title = !empty($form_title) ? $form_title : 'Registration Form';
                     $reg_subtitle = !empty($form_subtitle) ? $form_subtitle : '';
                 ?>
                 <h2 style="font-size: 2rem; text-align: center; margin-bottom: 0.5rem; font-weight: 800; color: #1a1a2e;"><?php echo esc_html($reg_title); ?></h2>
@@ -239,7 +239,7 @@ if (have_posts()) :
                 <div style="width: 60px; height: 3px; background: #EA242A; margin: 0 auto 1.5rem;"></div>
                 <?php if (!empty($google_form_url)): ?>
                     <?php
-                        // Pastikan URL Google Form memiliki parameter embedded=true
+                        // Ensure the Google Form URL has the embedded=true parameter
                         $embed_url = $google_form_url;
                         if (strpos($embed_url, 'embedded=true') === false) {
                             $embed_url .= (strpos($embed_url, '?') !== false ? '&' : '?') . 'embedded=true';
