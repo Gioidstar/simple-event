@@ -205,6 +205,17 @@ function se_event_registration_form($atts) {
             $event_url = get_permalink($event_id);
             $ticket_qr_html = se_get_ticket_qr_html($submission_id);
             $feedback_url = get_post_meta($event_id, '_se_event_feedback_form_url', true);
+            $meeting_url = get_post_meta($event_id, '_se_event_meeting_url', true);
+
+            $meeting_html = '';
+            if (!empty($meeting_url)) {
+                $meeting_html = "
+    <div style='background: #E8F5E9; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #4CAF50;'>
+        <p style='margin: 0 0 10px; font-weight: bold;'>Join the Event Online</p>
+        <p style='margin: 0 0 10px;'>Use the link below to join the event via Zoom, Google Meet, or the designated platform:</p>
+        <p style='margin: 0;'><a href='" . esc_url($meeting_url) . "' style='display:inline-block; background:#4CAF50; color:#fff; padding:10px 20px; text-decoration:none; border-radius:4px; font-weight:bold;'>Join Meeting</a></p>
+    </div>";
+            }
 
             $feedback_html = '';
             if (!empty($feedback_url)) {
@@ -231,6 +242,7 @@ function se_event_registration_form($atts) {
         <p><strong>Time:</strong> {$start_time} - {$end_time}</p>
         <p><strong>Location:</strong> {$location}</p>
     </div>
+    {$meeting_html}
     {$ticket_qr_html}
     {$feedback_html}
     <p><a href='{$event_url}' style='display:inline-block; background:#EA242A; color:white; padding:10px 20px; text-decoration:none; border-radius:4px;'>View Event Details</a></p>

@@ -52,6 +52,7 @@ function se_render_event_meta_box($post) {
     $form_subtitle = get_post_meta($post->ID, '_se_event_form_subtitle', true);
     $until_finished = get_post_meta($post->ID, '_se_event_until_finished', true);
     $feedback_form_url = get_post_meta($post->ID, '_se_event_feedback_form_url', true);
+    $meeting_url = get_post_meta($post->ID, '_se_event_meeting_url', true);
 
     // Set default time values if empty
     if (empty($start_time)) $start_time = '09:00';
@@ -102,6 +103,11 @@ function se_render_event_meta_box($post) {
         <p><label for="se_event_feedback_form_url"><strong>Feedback Form URL:</strong></label><br>
         <input type="url" id="se_event_feedback_form_url" name="se_event_feedback_form_url" value="<?php echo esc_attr($feedback_form_url); ?>" style="width:100%;" placeholder="https://docs.google.com/forms/d/e/FORM_ID/viewform or any URL">
         <small style="color:#666;">Optional. Supports Google Form, Typeform, or any feedback link. If filled, the link will be included in the confirmation email after registration or watching the replay.</small></p>
+
+        <hr style="margin: 15px 0;">
+        <p><label for="se_event_meeting_url"><strong>Meeting Link (Zoom/Google Meet/etc):</strong></label><br>
+        <input type="url" id="se_event_meeting_url" name="se_event_meeting_url" value="<?php echo esc_attr($meeting_url); ?>" style="width:100%;" placeholder="https://zoom.us/j/... or https://meet.google.com/...">
+        <small style="color:#666;">Optional. Zoom, Google Meet, or any meeting/press conference link. If filled, the link will be included in the registration confirmation email only (not replay).</small></p>
 
         <hr style="margin: 15px 0;">
         <p><label for="se_event_form_title"><strong>Form Title (Custom):</strong></label><br>
@@ -617,6 +623,10 @@ function se_save_event_meta($post_id) {
 
     if (isset($_POST['se_event_feedback_form_url'])) {
         update_post_meta($post_id, '_se_event_feedback_form_url', esc_url_raw($_POST['se_event_feedback_form_url']));
+    }
+
+    if (isset($_POST['se_event_meeting_url'])) {
+        update_post_meta($post_id, '_se_event_meeting_url', esc_url_raw($_POST['se_event_meeting_url']));
     }
 
     if (isset($_POST['se_event_form_title'])) {
