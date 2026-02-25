@@ -103,6 +103,12 @@ function se_event_list_shortcode($atts) {
     }
 
     $query = new WP_Query($args);
+
+    // Prime meta cache for all queried posts (single query instead of N*6 queries)
+    if ($query->have_posts()) {
+        update_post_meta_cache(wp_list_pluck($query->posts, 'ID'));
+    }
+
     ob_start();
 
     // Output CSS once
@@ -171,7 +177,7 @@ function se_event_list_shortcode($atts) {
                 <?php if ($thumbnail): ?>
                 <div class="se-event-thumb">
                     <a href="<?php the_permalink(); ?>">
-                        <img src="<?php echo esc_url($thumbnail); ?>" alt="<?php the_title_attribute(); ?>">
+                        <img src="<?php echo esc_url($thumbnail); ?>" alt="<?php the_title_attribute(); ?>" loading="lazy">
                     </a>
                     <?php if (!empty($categories) && !is_wp_error($categories)): ?>
                     <div class="se-event-cats">

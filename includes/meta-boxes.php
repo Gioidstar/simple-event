@@ -53,6 +53,7 @@ function se_render_event_meta_box($post) {
     $until_finished = get_post_meta($post->ID, '_se_event_until_finished', true);
     $feedback_form_url = get_post_meta($post->ID, '_se_event_feedback_form_url', true);
     $meeting_url = get_post_meta($post->ID, '_se_event_meeting_url', true);
+    $short_description = get_post_meta($post->ID, '_se_event_short_description', true);
 
     // Set default time values if empty
     if (empty($start_time)) $start_time = '09:00';
@@ -85,6 +86,10 @@ function se_render_event_meta_box($post) {
 
         <p><label for="se_event_location"><strong>Location:</strong></label><br>
         <input type="text" id="se_event_location" name="se_event_location" value="<?php echo esc_attr($location); ?>" style="width:100%;"></p>
+
+        <p><label for="se_event_short_description"><strong>Short Description (for Social Media):</strong></label><br>
+        <textarea id="se_event_short_description" name="se_event_short_description" style="width:100%; height:60px;" maxlength="200" placeholder="e.g.: Join our exclusive webinar on IT talent management..."><?php echo esc_textarea($short_description); ?></textarea>
+        <small style="color:#666;">Optional. Max 200 characters. Used as description when the event is shared on Facebook, LinkedIn, WhatsApp, X, etc. Not displayed on the website.</small></p>
 
         <p><label for="se_event_quota"><strong>Maximum Quota:</strong></label><br>
         <input type="number" id="se_event_quota" name="se_event_quota" value="<?php echo esc_attr($quota); ?>" min="1"></p>
@@ -247,6 +252,12 @@ function se_render_speakers_meta_box($post) {
                     </select></p>
                     <p style="margin:0; <?php echo $is_custom ? '' : 'display:none;'; ?>" class="se-custom-role-wrap"><input type="text" name="se_speakers[<?php echo $i; ?>][role_custom]" value="<?php echo esc_attr($is_custom ? $role : ''); ?>" placeholder="Type role, e.g.: Panelist, Host, MC" style="width:100%;" class="se-custom-role"></p>
                     <input type="hidden" name="se_speakers[<?php echo $i; ?>][role]" value="<?php echo esc_attr($role); ?>" class="se-role-value">
+                    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                        <input type="url" name="se_speakers[<?php echo $i; ?>][linkedin]" value="<?php echo esc_attr($speaker['linkedin'] ?? ''); ?>" placeholder="LinkedIn URL" style="flex:1; min-width:120px; padding:4px 8px; font-size:12px;">
+                        <input type="url" name="se_speakers[<?php echo $i; ?>][instagram]" value="<?php echo esc_attr($speaker['instagram'] ?? ''); ?>" placeholder="Instagram URL" style="flex:1; min-width:120px; padding:4px 8px; font-size:12px;">
+                        <input type="url" name="se_speakers[<?php echo $i; ?>][twitter]" value="<?php echo esc_attr($speaker['twitter'] ?? ''); ?>" placeholder="X / Twitter URL" style="flex:1; min-width:120px; padding:4px 8px; font-size:12px;">
+                        <input type="url" name="se_speakers[<?php echo $i; ?>][facebook]" value="<?php echo esc_attr($speaker['facebook'] ?? ''); ?>" placeholder="Facebook URL" style="flex:1; min-width:120px; padding:4px 8px; font-size:12px;">
+                    </div>
                 </div>
                 <button type="button" class="se-remove-speaker" style="position:absolute; top:8px; right:8px; background:#EA242A; color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:14px; line-height:24px; text-align:center;" title="Remove">&times;</button>
             </div>
@@ -283,6 +294,12 @@ function se_render_speakers_meta_box($post) {
                     </select></p>
                     <p style="margin:0; display:none;" class="se-custom-role-wrap"><input type="text" name="se_speakers[${idx}][role_custom]" value="" placeholder="Type role, e.g.: Panelist, Host, MC" style="width:100%;" class="se-custom-role"></p>
                     <input type="hidden" name="se_speakers[${idx}][role]" value="speaker" class="se-role-value">
+                    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                        <input type="url" name="se_speakers[${idx}][linkedin]" value="" placeholder="LinkedIn URL" style="flex:1; min-width:120px; padding:4px 8px; font-size:12px;">
+                        <input type="url" name="se_speakers[${idx}][instagram]" value="" placeholder="Instagram URL" style="flex:1; min-width:120px; padding:4px 8px; font-size:12px;">
+                        <input type="url" name="se_speakers[${idx}][twitter]" value="" placeholder="X / Twitter URL" style="flex:1; min-width:120px; padding:4px 8px; font-size:12px;">
+                        <input type="url" name="se_speakers[${idx}][facebook]" value="" placeholder="Facebook URL" style="flex:1; min-width:120px; padding:4px 8px; font-size:12px;">
+                    </div>
                 </div>
                 <button type="button" class="se-remove-speaker" style="position:absolute; top:8px; right:8px; background:#EA242A; color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:14px; line-height:24px; text-align:center;" title="Remove">&times;</button>
             `;
@@ -629,6 +646,10 @@ function se_save_event_meta($post_id) {
         update_post_meta($post_id, '_se_event_meeting_url', esc_url_raw($_POST['se_event_meeting_url']));
     }
 
+    if (isset($_POST['se_event_short_description'])) {
+        update_post_meta($post_id, '_se_event_short_description', sanitize_textarea_field($_POST['se_event_short_description']));
+    }
+
     if (isset($_POST['se_event_form_title'])) {
         update_post_meta($post_id, '_se_event_form_title', sanitize_text_field($_POST['se_event_form_title']));
     }
@@ -650,6 +671,10 @@ function se_save_event_meta($post_id) {
                 'name'      => $name,
                 'job_title' => sanitize_text_field($speaker['job_title'] ?? ''),
                 'role'      => $role,
+                'linkedin'  => esc_url_raw($speaker['linkedin'] ?? ''),
+                'instagram' => esc_url_raw($speaker['instagram'] ?? ''),
+                'twitter'   => esc_url_raw($speaker['twitter'] ?? ''),
+                'facebook'  => esc_url_raw($speaker['facebook'] ?? ''),
             ];
         }
         update_post_meta($post_id, '_se_event_speakers', $speakers);

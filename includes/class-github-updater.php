@@ -31,6 +31,7 @@ class SE_GitHub_Updater {
 
         add_filter('pre_set_site_transient_update_plugins', [$this, 'check_update']);
         add_filter('plugins_api', [$this, 'plugin_info'], 20, 3);
+        add_filter('upgrader_source_selection', [$this, 'rename_source_folder'], 10, 4);
         add_filter('upgrader_post_install', [$this, 'after_install'], 10, 3);
     }
 
@@ -249,7 +250,42 @@ class SE_GitHub_Updater {
     }
 
     /**
-     * Rename folder after install to match expected plugin folder name
+     * Rename extracted source folder to match plugin folder name.
+     * This handles both auto-update and manual ZIP upload scenarios.
+     *
+     * @param string $source        Extracted source path
+     * @param string $remote_source Remote source path
+     * @param object $upgrader      WP_Upgrader instance
+     * @param array  $hook_extra    Extra arguments
+     * @return string|WP_Error
+     */
+    public function rename_source_folder($source, $remote_source, $upgrader, $hook_extra) {
+        global $wp_filesystem;
+
+        $plugin_dir_name = dirname($this->slug); // e.g. "simple-event"
+
+        // Check if this is our plugin (auto-update has plugin key)
+        if (isset($hook_extra['plugin']) && $hook_extra['plugin'] === $this->slug) {
+            // Auto-update flow — rename folder
+        } else {
+            // Manual upload — check if the extracted folder contains our main plugin file
+            $source_plugin_file = trailingslashit($source) . basename($this->plugin_file);
+            if (!$wp_filesystem->exists($source_plugin_file)) {
+                return $source; // Not our plugin, skip
+            }
+        }
+
+        $corrected_source = trailingslashit($remote_source) . $plugin_dir_name . '/';
+
+        if ($source !== $corrected_source) {
+            $wp_filesystem->move($source, $corrected_source);
+        }
+
+        return $corrected_source;
+    }
+
+    /**
+     * Post-install cleanup: clear cache and re-activate if needed.
      *
      * @param bool $response
      * @param array $hook_extra
@@ -257,19 +293,6 @@ class SE_GitHub_Updater {
      * @return array
      */
     public function after_install($response, $hook_extra, $result) {
-        global $wp_filesystem;
-
-        // Check if this is our plugin
-        if (!isset($hook_extra['plugin']) || $hook_extra['plugin'] !== $this->slug) {
-            return $result;
-        }
-
-        $plugin_folder = WP_PLUGIN_DIR . '/' . dirname($this->slug);
-
-        // Move from downloaded folder to proper plugin folder
-        $wp_filesystem->move($result['destination'], $plugin_folder);
-        $result['destination'] = $plugin_folder;
-
         // Clear updater cache after install
         delete_transient($this->cache_key);
 

@@ -61,7 +61,7 @@ function se_event_replay_form($atts) {
     $form_submitted = false;
 
     // Check if form was just submitted
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['se_replay_register'])) {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['se_replay_register']) && wp_verify_nonce($_POST['_se_replay_nonce'] ?? '', 'se_replay_' . $event_id)) {
         $db_data = [
             'event_id'   => $event_id,
             'form_type'  => 'replay',
@@ -166,6 +166,7 @@ function se_event_replay_form($atts) {
         ?>
         <div style="width: 100%;">
             <form method="post">
+                <?php wp_nonce_field('se_replay_' . $event_id, '_se_replay_nonce'); ?>
                 <?php foreach ($form_fields as $field): ?>
                     <?php se_render_form_field($field, 'se_replay'); ?>
                 <?php endforeach; ?>

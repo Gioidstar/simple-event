@@ -149,7 +149,7 @@ function se_event_registration_form($atts) {
         return ob_get_clean();
     }
 
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['se_register'])) {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['se_register']) && wp_verify_nonce($_POST['_se_reg_nonce'] ?? '', 'se_register_' . $event_id)) {
         $db_data = [
             'event_id'   => $event_id,
             'created_at' => current_time('mysql'),
@@ -261,6 +261,7 @@ function se_event_registration_form($atts) {
     ?>
     <div style="width: 100%;">
         <form method="post">
+            <?php wp_nonce_field('se_register_' . $event_id, '_se_reg_nonce'); ?>
             <?php foreach ($form_fields as $field): ?>
                 <?php se_render_form_field($field, 'se'); ?>
             <?php endforeach; ?>

@@ -84,6 +84,12 @@ function se_event_compact_shortcode($atts) {
     }
 
     $query = new WP_Query($args);
+
+    // Prime meta cache for all queried posts (single query instead of N*5 queries)
+    if ($query->have_posts()) {
+        update_post_meta_cache(wp_list_pluck($query->posts, 'ID'));
+    }
+
     ob_start();
 
     se_output_event_compact_css();
@@ -122,7 +128,7 @@ function se_event_compact_shortcode($atts) {
                 <?php if ($thumbnail): ?>
                 <div class="se-compact-thumb">
                     <a href="<?php the_permalink(); ?>">
-                        <img src="<?php echo esc_url($thumbnail); ?>" alt="<?php the_title_attribute(); ?>">
+                        <img src="<?php echo esc_url($thumbnail); ?>" alt="<?php the_title_attribute(); ?>" loading="lazy">
                     </a>
                 </div>
                 <?php endif; ?>
