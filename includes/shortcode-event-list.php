@@ -106,7 +106,7 @@ function se_event_list_shortcode($atts) {
 
     // Prime meta cache for all queried posts (single query instead of N*6 queries)
     if ($query->have_posts()) {
-        update_post_meta_cache(wp_list_pluck($query->posts, 'ID'));
+        update_postmeta_cache(wp_list_pluck($query->posts, 'ID'));
     }
 
     ob_start();
