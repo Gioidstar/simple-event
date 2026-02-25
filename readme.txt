@@ -6,7 +6,24 @@ A WordPress plugin to create events with registration forms, replay forms, QR e-
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.1.3] - 2026-02-25
+### Added
+- **Add  Link**:  Add Short Description for share social media
+- **Add Social Media**: Add Link Social media Profile Mentor and Speaker
+- optimized css and javascript
+- add field short description social media
+- fixing bug copy link and other
+
+## [2.1.2] - 2026-02-24
+### Added
+- **Add  Link **:  Add link zoom or meet automatic after register event
+## [2.1.1] - 2026-02-24
+### Added
+- **Add  Shortcode Compact**:  Feature form Mega menu or grid list
+-  **Paginition**: Add feature paginition list for limit page
+- fixing limit shorcode
+
+**Full Changelog**: https://github.com/Gioidstar/simple-event/compare/v2.1.0...v2.1.1
 
 ## [2.1.0] - 2026-02-24
 ### Added
