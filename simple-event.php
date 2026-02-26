@@ -3,7 +3,7 @@
  * Plugin Name: Simple Event
  * Plugin URI: https://github.com/Gioidstar/simple-event
  * Description: Plugin to create events and registration forms with submission system.
- * Version: 2.1.3
+ * Version: 2.1.4
  * Author: Gio fandi
  * Author URI: https://github.com/Gioidstar
  */
