@@ -82,16 +82,14 @@ if (have_posts()) :
                         var container = document.getElementById('se-share-buttons');
                         if (!container) return;
 
-                        // Read from og:description meta tag in <head>
-                        var ogDesc = document.querySelector('meta[property="og:description"]');
-                        var desc = ogDesc ? ogDesc.getAttribute('content') : '';
+                        var shortDesc = <?php echo json_encode(get_post_meta(get_the_ID(), '_se_event_short_description', true) ?: ''); ?>;
                         var url = window.location.href;
                         var title = document.title;
 
                         var eu = encodeURIComponent(url);
                         var et = encodeURIComponent(title);
-                        var ed = desc ? encodeURIComponent(desc) : '';
-                        var textWithDesc = desc ? et + '%0A' + ed : et;
+                        var ed = shortDesc ? encodeURIComponent(shortDesc) : '';
+                        var fullText = et + (ed ? '%0A' + ed : '');
 
                         container.addEventListener('click', function(e) {
                             var btn = e.target.closest('[data-share]');
@@ -102,16 +100,16 @@ if (have_posts()) :
 
                             switch(type) {
                                 case 'facebook':
-                                    shareUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + eu + '&quote=' + textWithDesc;
+                                    shareUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + eu;
                                     break;
                                 case 'linkedin':
-                                    shareUrl = 'https://www.linkedin.com/sharing/share-offsite/?url=' + eu;
+                                    shareUrl = 'https://www.linkedin.com/feed/?shareActive=true&text=' + fullText + '%0A' + eu;
                                     break;
                                 case 'whatsapp':
-                                    shareUrl = 'https://wa.me/?text=' + et + (desc ? '%0A' + ed : '') + '%0A' + eu;
+                                    shareUrl = 'https://wa.me/?text=' + fullText + '%0A' + eu;
                                     break;
                                 case 'twitter':
-                                    shareUrl = 'https://twitter.com/intent/tweet?text=' + textWithDesc + '&url=' + eu;
+                                    shareUrl = 'https://twitter.com/intent/tweet?text=' + fullText + '&url=' + eu;
                                     break;
                                 case 'copy':
                                     var tmp = document.createElement('textarea');
