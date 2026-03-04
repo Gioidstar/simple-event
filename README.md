@@ -20,6 +20,7 @@ A WordPress plugin to create events with registration forms, replay forms, QR e-
 - **Event List Shortcode** — `[event_list]` shortcode with category filter, grid columns, status filter, and pagination.
 - **Elementor Widget** — Event Grid widget for Elementor with customizable layout and filters.
 - **GitHub Auto-Updater** — Automatic plugin updates from GitHub releases.
+- **Event-based Email Blocking** - Email Automatic Disallow email after blocking email.
 
 ## Requirements
 

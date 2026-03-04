@@ -115,6 +115,12 @@ function se_render_event_meta_box($post) {
         <small style="color:#666;">Optional. Zoom, Google Meet, or any meeting/press conference link. If filled, the link will be included in the registration confirmation email only (not replay).</small></p>
 
         <hr style="margin: 15px 0;">
+        <?php $blocked_domains = get_post_meta($post->ID, '_se_event_blocked_email_domains', true); ?>
+        <p><label for="se_event_blocked_email_domains"><strong>Blocked Email Domains:</strong></label><br>
+        <textarea id="se_event_blocked_email_domains" name="se_event_blocked_email_domains" style="width:100%; height:60px;" placeholder="e.g.: mailinator.com, tempmail.com, yopmail.com"><?php echo esc_textarea($blocked_domains); ?></textarea>
+        <small style="color:#666;">Comma separated. Emails from these domains will be rejected during registration. e.g.: <code>mailinator.com, tempmail.com, guerrillamail.com</code></small></p>
+
+        <hr style="margin: 15px 0;">
         <p><label for="se_event_form_title"><strong>Form Title (Custom):</strong></label><br>
         <input type="text" id="se_event_form_title" name="se_event_form_title" value="<?php echo esc_attr($form_title); ?>" style="width:100%;" placeholder="e.g.: Don't Miss This Exclusive Session!">
         <small style="color:#666;">Large title displayed above the registration form. Leave empty for default.</small></p>
@@ -648,6 +654,10 @@ function se_save_event_meta($post_id) {
 
     if (isset($_POST['se_event_short_description'])) {
         update_post_meta($post_id, '_se_event_short_description', sanitize_textarea_field($_POST['se_event_short_description']));
+    }
+
+    if (isset($_POST['se_event_blocked_email_domains'])) {
+        update_post_meta($post_id, '_se_event_blocked_email_domains', sanitize_textarea_field($_POST['se_event_blocked_email_domains']));
     }
 
     if (isset($_POST['se_event_form_title'])) {

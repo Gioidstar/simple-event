@@ -94,6 +94,15 @@ function se_event_replay_form($atts) {
         $email = $db_data['email'] ?? '';
         $name = $db_data['name'] ?? '';
 
+        // Check blocked email domains
+        $blocked_domains_raw = get_post_meta($event_id, '_se_event_blocked_email_domains', true);
+        $email_domain = strtolower(substr(strrchr($email, '@'), 1));
+        $is_domain_blocked = false;
+        if (!empty($blocked_domains_raw) && !empty($email_domain)) {
+            $blocked_list = array_filter(array_map('trim', array_map('strtolower', explode(',', $blocked_domains_raw))));
+            $is_domain_blocked = in_array($email_domain, $blocked_list, true);
+        }
+
         // Check if email has already submitted replay for this event
         $exists = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM $table_name WHERE event_id = %d AND email = %s AND form_type = %s",
@@ -102,7 +111,9 @@ function se_event_replay_form($atts) {
             'replay'
         ));
 
-        if ($exists > 0) {
+        if ($is_domain_blocked) {
+            $replay_error = 'Email domain "' . esc_html($email_domain) . '" is not allowed. Please use a valid email Business.';
+        } elseif ($exists > 0) {
             // Already registered, show video directly
             $show_video = true;
             $form_submitted = true;
@@ -165,6 +176,9 @@ function se_event_replay_form($atts) {
     } else {
         ?>
         <div style="width: 100%;">
+            <?php if (!empty($replay_error)): ?>
+                <p style="color:red;"><?php echo esc_html($replay_error); ?></p>
+            <?php endif; ?>
             <form method="post">
                 <?php wp_nonce_field('se_replay_' . $event_id, '_se_replay_nonce'); ?>
                 <?php foreach ($form_fields as $field): ?>

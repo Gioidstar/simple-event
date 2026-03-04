@@ -149,6 +149,9 @@ function se_event_registration_form($atts) {
         return ob_get_clean();
     }
 
+    $registration_success = false;
+    $registration_error = '';
+
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['se_register']) && wp_verify_nonce($_POST['_se_reg_nonce'] ?? '', 'se_register_' . $event_id)) {
         $db_data = [
             'event_id'   => $event_id,
@@ -181,6 +184,15 @@ function se_event_registration_form($atts) {
         $email = $db_data['email'] ?? '';
         $name = $db_data['name'] ?? '';
 
+        // Check blocked email domains
+        $blocked_domains_raw = get_post_meta($event_id, '_se_event_blocked_email_domains', true);
+        $email_domain = strtolower(substr(strrchr($email, '@'), 1));
+        $is_domain_blocked = false;
+        if (!empty($blocked_domains_raw) && !empty($email_domain)) {
+            $blocked_list = array_filter(array_map('trim', array_map('strtolower', explode(',', $blocked_domains_raw))));
+            $is_domain_blocked = in_array($email_domain, $blocked_list, true);
+        }
+
         // Check if already registered
         $exists = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM $table_name WHERE event_id = %d AND email = %s",
@@ -188,8 +200,10 @@ function se_event_registration_form($atts) {
             $email
         ));
 
-        if ($exists > 0) {
-            echo '<p style="color:red;">This email is already registered for this event.</p>';
+        if ($is_domain_blocked) {
+            $registration_error = 'Email domain "' . esc_html($email_domain) . '" is not allowed. Please use a valid email Business.';
+        } elseif ($exists > 0) {
+            $registration_error = 'This email is already registered for this event.';
         } else {
             $wpdb->insert($table_name, $db_data);
             $submission_id = $wpdb->insert_id;
@@ -254,22 +268,33 @@ function se_event_registration_form($atts) {
             $headers = ['Content-Type: text/html; charset=UTF-8'];
             wp_mail($email, $subject, $message, $headers);
 
-            echo '<p style="color:green;">Registration successful! Check your email for event details.</p>';
+            $registration_success = true;
         }
     }
 
     ?>
     <div style="width: 100%;">
-        <form method="post">
-            <?php wp_nonce_field('se_register_' . $event_id, '_se_reg_nonce'); ?>
-            <?php foreach ($form_fields as $field): ?>
-                <?php se_render_form_field($field, 'se'); ?>
-            <?php endforeach; ?>
-            <p><button type="submit" name="se_register" style="width:100%; padding: 12px 20px; background-color: #EA242A; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px;">Register Now</button></p>
-        </form>
+        <?php if ($registration_success): ?>
+            <div style="text-align: center; padding: 40px 20px;">
+                <div style="font-size: 48px; margin-bottom: 16px;">&#10004;</div>
+                <h3 style="color: #2e7d32; margin-bottom: 12px;">Registration Successful!</h3>
+                <p style="color: #555; font-size: 16px;">Check your email for event details.</p>
+            </div>
+        <?php else: ?>
+            <?php if (!empty($registration_error)): ?>
+                <p style="color:red;"><?php echo esc_html($registration_error); ?></p>
+            <?php endif; ?>
+            <form method="post">
+                <?php wp_nonce_field('se_register_' . $event_id, '_se_reg_nonce'); ?>
+                <?php foreach ($form_fields as $field): ?>
+                    <?php se_render_form_field($field, 'se'); ?>
+                <?php endforeach; ?>
+                <p><button type="submit" name="se_register" style="width:100%; padding: 12px 20px; background-color: #EA242A; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px;">Register Now</button></p>
+            </form>
+        <?php endif; ?>
     </div>
     <?php
-    if ($has_tel) { se_render_intl_tel_init(); }
+    if ($has_tel && !$registration_success) { se_render_intl_tel_init(); }
 
     return ob_get_clean();
 }
