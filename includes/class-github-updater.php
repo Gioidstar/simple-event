@@ -155,13 +155,17 @@ class SE_GitHub_Updater {
                 }
             }
 
+            $icon_url = plugin_dir_url($this->plugin_file) . 'assets/icon.svg';
             $transient->response[$this->slug] = (object) [
                 'slug' => dirname($this->slug),
                 'plugin' => $this->slug,
                 'new_version' => $latest_version,
                 'url' => $release->html_url,
                 'package' => $download_url,
-                'icons' => [],
+                'icons' => [
+                    'svg' => $icon_url,
+                    'default' => $icon_url,
+                ],
                 'banners' => [],
                 'tested' => get_bloginfo('version'),
                 'requires_php' => '7.4',
@@ -210,6 +214,7 @@ class SE_GitHub_Updater {
             }
         }
 
+        $icon_url = plugin_dir_url($this->plugin_file) . 'assets/icon.svg';
         return (object) [
             'name' => $plugin_data['Name'],
             'slug' => dirname($this->slug),
@@ -220,6 +225,10 @@ class SE_GitHub_Updater {
             'sections' => [
                 'description' => $plugin_data['Description'],
                 'changelog' => $this->parse_changelog($release->body),
+            ],
+            'icons' => [
+                'svg' => $icon_url,
+                'default' => $icon_url,
             ],
             'download_link' => $download_url,
             'last_updated' => $release->published_at,
